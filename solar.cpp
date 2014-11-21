@@ -56,24 +56,16 @@
             No bugs to speak of.
  *
  ******************************************************************************/
-#include "fractal.h"
+#include "solar.h"
 #include <cmath>
 
 using namespace std;
 
 // screen state
-screen current_screen = INITIATOR_SHAPE;
+mode current_mode = TEXTURE;
 int ScreenWidth = 1280;
 int ScreenHeight = 512;
 int fps = 60;
-
-// fractal drawing stuff
-Point mouse_point;
-bool mouse_pressed = false;
-int iterations = 0;
-int max_iterations = 1;
-Polygon generator;
-Polygon initiator;
 
 // function prototypes
 void initOpenGL();
@@ -82,39 +74,28 @@ void step( int value);
 void reshape( int w, int h );
 void keyboard_down( unsigned char key, int x, int y);
 void mouse_action(int button, int state, int x, int y);
-void mouse_movement(int x, int y);
 void right_up(int x, int y);
 void left_up(int x, int y);
 
-// step functions
-void initiator_step();
-void generator_step();
-void fractal_step();
-void shared_step();
-
 // display functions
 void display();
-void display_initiator();
-void display_generator();
-void display_fractal();
+void display_smooth();
+void display_flat();
+void display_wireframe();
+void display_textured();
  
  /***************************************************************************//**
  * main
  * Authors - Derek Stotz, Charles Parsons
  *
- * The entry point of the fractal application.  Sets up the environment.
+ * The entry point of the solar application.  Sets up the environment.
  *
  * Parameters - 
             argc - the number of arguments from the command prompt.
             argv - the command line arguments.
  ******************************************************************************/
 int main ( int argc, char *argv[] )
-{  
-    // set the max iterations to the command line argument
-
-    if ( argc > 1 )
-        iterations = atoi(argv[1]);
-
+{
     // start displaying
     screenSetup();
     glutInit(&argc, argv);
@@ -137,7 +118,7 @@ void initOpenGL( void )
 
     glutInitWindowSize( ScreenWidth, ScreenHeight );    // initial window size
     glutInitWindowPosition( 100, 50 );                  // initial window position
-    glutCreateWindow( "Fractals" );                  // window title
+    glutCreateWindow( "Solar System" );                  // window title
 
     glutIgnoreKeyRepeat(1); // ignore repeated key presses
     glutKeyboardFunc( keyboard_down );
@@ -155,21 +136,18 @@ void initOpenGL( void )
  * step
  * Authors - Derek Stotz, Charles Parsons
  *
- * Does a step in the application, handled differently depending on which screen is active
+ * Does a step in the application, calling the step functions of each celestial body
+ * And applying any camera movements.
  * 
  * Parameters - 
     value - an unused integer passed by glutTimerFunc
  ******************************************************************************/
 void step ( int value )
 {
-    switch( current_screen )
-    {
-        case FRACTAL:
-            fractal_step();
-            break;
-        default:
-            break;
-    }
+    // apply camera changes  based on what keys are pressed
+	
+	// loop through every body, calling that body's step function
+	
     glutPostRedisplay();
     glutTimerFunc( 1000/fps, step, 0 );
 }
@@ -178,28 +156,24 @@ void step ( int value )
  * display
  * Authors - Derek Stotz, Charles Parsons
  *
- * The display callback, taking into account the current screen
+ * The display callback, taking into account the current mode
  ******************************************************************************/
 void display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT );
-    drawField(ScreenHeight, ScreenWidth);
-    switch( current_screen )
+    switch( current_mode )
     {
-        case INITIATOR_SHAPE:
-            if(mouse_pressed && initiator.length >= 1)
-                drawLine(initiator.points[initiator.length-1], mouse_point, White);
-            display_initiator();
+        case SMOOTH:
+            display_smooth();
             break;
-        case GENERATOR_PATTERN:
-            if(mouse_pressed && generator.length >= 1)
-                drawLine(generator.points[generator.length-1], mouse_point, White);
-            display_generator();
+        case FLAT:
+            display_flat();
             break;
-        case FRACTAL:
-            display_fractal();
+        case WIREFRAME:
+            display_wireframe();
             break;
         default:
+			display_textured();
             break;
     }
 
@@ -242,10 +216,7 @@ void reshape( int w, int h )
  ******************************************************************************/
 void screenSetup()
 {
-    initiator.points = new Point[100000];
-    initiator.addPoint(-ScreenWidth + 256, 0);
-    generator.points = new Point[100];
-    generator.addPoint(64, 0);
+
 }
 
  /***************************************************************************//**
@@ -260,6 +231,37 @@ void keyboard_down( unsigned char key, int x, int y )
     {
         case 27:
             exit ( 0 );
+		case 'W':
+		case 'w':
+			// Rotate forward
+			break;
+		case 'A':
+		case 'a':
+			// Rotate System Left
+			break;
+		case 'S':
+		case 's':
+			// Rotate backward
+			break;
+		case 'D':
+		case 'd':
+			// Rotate System Right
+			break;
+		case 'Q':
+		case 'q':
+			// Strafe Left
+			break;
+		case 'E':
+		case 'e':
+			// Strafe Right
+			break;
+		case 'z':
+		case 'Z':
+			// Zoom In
+		case 'x':
+		case 'X':
+			// Zoom Out
+		
         default:
             break;
     }
@@ -298,23 +300,6 @@ void mouse_action(int button, int state, int x, int y)
  ******************************************************************************/
 void left_up(int x, int y)
 {
-    switch( current_screen )
-    {
-        case INITIATOR_SHAPE:
-            if( x < ScreenWidth/2 )
-            {
-                initiator.addPoint(x * 2 - ScreenWidth, - y * 2 + ScreenHeight);
-            }
-            break;
-        case GENERATOR_PATTERN:
-            if( x > ScreenWidth/2 )
-            {
-                generator.addPoint(x * 2 - ScreenWidth, - y * 2 + ScreenHeight);
-            }
-            break;
-        default:
-            break;
-    }
     mouse_pressed = false;
 }
 
@@ -327,20 +312,20 @@ void left_up(int x, int y)
  ******************************************************************************/
 void right_up(int x, int y)
 {
-    switch( current_screen )
+    switch( current_mode )
     {
         case INITIATOR_SHAPE:
             if( initiator.length > 2 )
             {
                 initiator.close();
-                current_screen = GENERATOR_PATTERN;
+                current_mode = GENERATOR_PATTERN;
             }
             break;
         case GENERATOR_PATTERN:
             if( generator.length > 1 )
             {
                 generator.normalize();
-                current_screen = FRACTAL;
+                current_mode = FRACTAL;
             }
             break;
         default:
@@ -349,104 +334,45 @@ void right_up(int x, int y)
 }
 
  /***************************************************************************//**
- * Display Initiator
+ * Display Flat
  * Authors - Derek Stotz, Charles Parsons
  *
- * Displays relevant elements to the initiator drawing screen
+ * Displays planetary system with flat shading
  ******************************************************************************/
-void display_initiator()
+void display_flat()
 {
-    char* text = new(nothrow) char[30];
-    strcpy(text, "Right-Click to Close Initiator");
-    drawText(text, - ScreenWidth + 32 );
-    drawPolygon(initiator, White, true);
-    delete text;
+    
 }
 
  /***************************************************************************//**
- * Display Generator
+ * Display Smooth
  * Authors - Derek Stotz, Charles Parsons
  *
- * Displays relevant elements to the generator drawing screen
+ * Displays planetary system with smooth shading
  ******************************************************************************/
-void display_generator()
+void display_smooth()
 {
-    char* text = new(nothrow) char[30];
-    strcpy(text, "Right-Click to End Generator");
-    drawText(text, 32 );
-    drawPolygon(initiator, White, false);
-    drawPolygon(generator, White, true);
-    delete text;
+    
 }
 
  /***************************************************************************//**
- * Display Fractal
+ * Display Wireframe
  * Authors - Derek Stotz, Charles Parsons
  *
- * Displays relevant elements to the fractal generation screen
+ * Displays planetary system in wireframes
  ******************************************************************************/
-void display_fractal()
+void display_wireframe()
 {
-    const char* iter_str = itoa(iterations);
-    char* text = new char[30];
-
-    strcpy(text, "Fractal iteration: ");
-    strcat(text, iter_str);
-    drawText(text, - ScreenWidth + 32 );
-    drawPolygon(initiator, White, false);
-    drawPolygon(generator, White, false);
-    delete text;
+    
 }
 
- /***************************************************************************//**
- * Fractal Step
+  /***************************************************************************//**
+ * Display Wireframe
  * Authors - Derek Stotz, Charles Parsons
  *
- * Does a step in the fractal generation screen mode.
- * Creates a new fractal from the old one and the generation pattern.
+ * Displays planetary system with mapped textures
  ******************************************************************************/
-void fractal_step()
+void display_texture()
 {
-    if(iterations >= max_iterations)
-        return;
-
-    Polygon new_fractal;
-    cout << "Fractal Length: " << itoa(initiator.length) << endl;
-    new_fractal.points = new Point[1000000];
-    for( unsigned long i = 0; i < initiator.length - 1; i++ )
-    {
-        cout << "starting new edge" << endl;
-        Polygon fractal_addition;
-        fractal_addition.points = new Point[100000];
-	    fitPattern(generator, initiator.points[i], initiator.points[i + 1], fractal_addition);
-        for ( unsigned long j = 0; j < fractal_addition.length; j++ )
-        {
-            cout << "adding fractal piont x = " << new_fractal.points[j].x << " y = " << new_fractal.points[j].y << endl;
-            new_fractal.addPoint(fractal_addition.points[j]);
-        }
-        delete fractal_addition.points;
-    }
-    iterations++;
-    cout << "replacing old fractal points" << endl;
-    initiator.length = new_fractal.length;
-
-    for(unsigned long i = 0; i < initiator.length; i++)
-    {
-        initiator.points[i] = new_fractal.points[i];
-    }
-
-    delete new_fractal.points;
-}
-
- /***************************************************************************//**
- * Mouse Movement
- * Authors - Derek Stotz, Charles Parsons
- *
- * Updates the mouse point when the pointer is moved
- ******************************************************************************/
-void mouse_movement(int x, int y)
-{
-    cout << "MOUSE MOVED to x = " << x << endl;
-    mouse_point.x = x * 2 - ScreenWidth;
-    mouse_point.y = - y * 2 + ScreenHeight;
+    
 }
