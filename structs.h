@@ -14,14 +14,14 @@ struct Point
     int x;
     int y;
     int z;
-}
+};
 
 struct Vector
 {
     double dx;
     double dy;
     double dz;
-}
+};
 
 struct Body
 {
@@ -29,7 +29,8 @@ struct Body
     Point position;
     float color[3];
     double emissivity;
-    Body[100] moons;
+    Body moons[100];
+
     int num_moons = 0;
 
     double orbital_period;
@@ -42,9 +43,9 @@ struct Body
     double rotation = 0;
 
     void step(double speed);
-    void add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, char* texture_file);
+    void add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file);
     void add_rings(const float color[3], double minradius, double maxradius, char* texture_file);
-}
+};
 
 struct Camera
 {
@@ -65,13 +66,13 @@ struct Camera
     void pan_backward(int d);
     void pan_left(int d);
     void pan_right(int d);
-}
+};
 
-struct AsteroidBelt
+struct Belt
 {
     int count;
     Point center;
-    Body[1000] asteroids;
+    Body asteroids[1000];
 
     double min_orbital_period;
     double max_orbital_period;
@@ -85,4 +86,4 @@ struct AsteroidBelt
 
     void step(double speed);
     void create_asteroids();
-}
+};

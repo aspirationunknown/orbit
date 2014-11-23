@@ -75,6 +75,10 @@
 
 using namespace std;
 
+// I/O
+Point mouse_point;
+bool mouse_pressed = false;
+
 // screen state
 mode current_mode = TEXTURE;
 int ScreenWidth = 1280;
@@ -84,7 +88,7 @@ int speed = 1.0;
 
 // solar system
 Body bodies[100];
-AsteroidBelt belts[10];
+Belt belts[10];
 int num_bodies = 0;
 int num_belts = 0;
 
@@ -102,10 +106,10 @@ void right_up(int x, int y);
 void left_up(int x, int y);
 
 void add_body(const float color[3], double emissivity, double radius, double orbital_period, 
-    double rotation_period, double orbital_radius, char* texture_file);
+    double rotation_period, double orbital_radius, const char* texture_file);
 void add_belt(int count, double min_orbital_period, double max_orbital_period,
     double min_rotation_period, double max_rotation_period, double min_orbital_radius,
-    double max_orbital_radius,double min_radius, double max_radius);
+    double max_orbital_radius,double min_radius, double max_radius, const char* texture_file);
 void create_solar_system();
 
 // display functions
@@ -158,7 +162,6 @@ void initOpenGL( void )
     glutSpecialFunc( special_down );
 
     glutMouseFunc(mouse_action);
-    glutMotionFunc(mouse_movement);
 
     glClearColor( 0.0, 0.0, 0.0, 1.0 );                 // use black for glClear command
     glutDisplayFunc( display );
@@ -450,20 +453,6 @@ void right_up(int x, int y)
 {
     switch( current_mode )
     {
-        case INITIATOR_SHAPE:
-            if( initiator.length > 2 )
-            {
-                initiator.close();
-                current_mode = GENERATOR_PATTERN;
-            }
-            break;
-        case GENERATOR_PATTERN:
-            if( generator.length > 1 )
-            {
-                generator.normalize();
-                current_mode = FRACTAL;
-            }
-            break;
         default:
             break;
     }
@@ -525,8 +514,8 @@ void add_body(
     double radius,          // in km
     double orbital_radius,  // in millions of km
     double orbital_period,  // in days
-    double rotation_period  // in hours
-    char* texture_file)
+    double rotation_period,  // in hours
+    const char* texture_file)
 {
     Body newBody;
 
@@ -560,14 +549,12 @@ void add_belt(
     double min_orbital_radius,
     double max_orbital_radius,
     double min_radius,
-    double max_radius)
+    double max_radius,
+    const char* texture_file)
 {
     Belt newBelt;
     newBelt.count = count;
-    newBelt.center.x = center_x;
-    newBelt.center.y = center_y;
-    newBelt.center.z = center_z;
-    
+
     newBelt.max_orbital_period = max_orbital_period;
     newBelt.min_rotation_period = min_rotation_period;
     newBelt.max_rotation_period = max_rotation_period;
@@ -595,20 +582,20 @@ void create_solar_system()
     add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp" );
     
     add_body(Blue, 0, 6378, 150, 365, 24, "earth.bmp");
-    bodies[num_bodies].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp");
+    bodies[num_bodies-1].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp");
     
     add_body(Red, 0, 3394, 228, 687, 24.6, "mars.bmp");
     
     add_belt(200, 300, 700, 10, 10000, 600, 5000, 20, 500, "ceres.bmp");  // asteroid belt
 
     add_body(Red, 0, 71398, 779, 4332, 9.8, "jupiter.bmp");
-    bodies[num_bodies].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp"); // Io
-    bodies[num_bodies].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp"); // Callisto
-    bodies[num_bodies].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp"); // Europa
-    bodies[num_bodies].add_moon(Green, 0, 2634, 1.07, 7.154, 7.154 * 24, "ganymede.bmp"); //Ganymede
+    bodies[num_bodies-1].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp"); // Io
+    bodies[num_bodies-1].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp"); // Callisto
+    bodies[num_bodies-1].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp"); // Europa
+    bodies[num_bodies-1].add_moon(Green, 0, 2634, 1.07, 7.154, 7.154 * 24, "ganymede.bmp"); //Ganymede
     
     add_body(Yellow, 0, 60270, 1424, 10761, 10.2, "saturn.bmp");
-    void add_rings(White, 67270, 140270, "saturnrings.bmp");
+    bodies[num_bodies-1].add_rings(White, 67270, 140270, "saturnrings.bmp");
 
     add_body(Cyan, 0, 25550, 2867, 30682, 15.5, "uranus.bmp");
     add_body(Blue, 0, 24750, 4492, 60195, 15.8, "neptune.bmp");

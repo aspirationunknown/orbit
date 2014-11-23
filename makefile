@@ -13,7 +13,7 @@ CXX = g++
 LINK = g++
 
 # Turn on optimization (add -g for debugging with gdb):
-CXXFLAGS = -O3 -std=c++11 -g
+CXXFLAGS = -O3 -w -std=c++11 -g
 
 # OpenGL/Mesa libraries for Linux:
 GL_LIBS = -lglut -lGLU -lGL -lm
@@ -33,12 +33,12 @@ bmpRead.o: bmpRead.cpp
 	g++ ${CXXFLAGS} -c bmpRead.cpp ${GL_LIBS}
 
 
-solar.o: solar.cpp solarGraphics.h bmpRead.o
+solar.o: solar.cpp solar.h bmpRead.o
 
 	g++ ${CXXFLAGS} -c solar.cpp ${GL_LIBS}
 
 
-solarGraphics.o: solarGraphics.cpp solarGraphics.h
+solarGraphics.o: solarGraphics.cpp solar.h
 
 	g++ ${CXXFLAGS} -c solarGraphics.cpp ${GL_LIBS}
 
