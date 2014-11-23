@@ -22,8 +22,22 @@
 
             Controls:
 
-                - 
-                - 
+                - W: Rotate forward
+                - S: Rotate backward
+                - A: Rotate System Left
+                - D: Rotate System Right
+
+                - Left: Pan Left
+                - Right: Pan Right
+                - Up: Pan Up
+                - Down: Pan Down
+
+                - R: Reset
+                - Space: Pause / Play
+                - P: Pause and move forward while p is pressed
+
+                - +: speed up the simulation by 10%
+                - -: slow down the simulation by 10%
 
             Press Esc to end the program.
                 
@@ -66,6 +80,13 @@ mode current_mode = TEXTURE;
 int ScreenWidth = 1280;
 int ScreenHeight = 512;
 int fps = 60;
+int speed = 1.0;
+
+// solar system
+Body bodies[100];
+AsteroidBelt belts[10];
+int num_bodies = 0;
+int num_belts = 0;
 
 // function prototypes
 void initOpenGL();
@@ -73,9 +94,19 @@ void screenSetup();
 void step( int value);
 void reshape( int w, int h );
 void keyboard_down( unsigned char key, int x, int y);
+void keyboard_up( unsigned char key, int x, int y);
+void special_up( int key, int x, int y );
+void special_down( int key, int x, int y );
 void mouse_action(int button, int state, int x, int y);
 void right_up(int x, int y);
 void left_up(int x, int y);
+
+void add_body(const float color[3], double emissivity, double radius, double orbital_period, 
+    double rotation_period, double orbital_radius, char* texture_file);
+void add_belt(int count, double min_orbital_period, double max_orbital_period,
+    double min_rotation_period, double max_rotation_period, double min_orbital_radius,
+    double max_orbital_radius,double min_radius, double max_radius);
+void create_solar_system();
 
 // display functions
 void display();
@@ -122,6 +153,10 @@ void initOpenGL( void )
 
     glutIgnoreKeyRepeat(1); // ignore repeated key presses
     glutKeyboardFunc( keyboard_down );
+    glutKeyboardUpFunc( keyboard_up );
+    glutSpecialUpFunc( special_up );
+    glutSpecialFunc( special_down );
+
     glutMouseFunc(mouse_action);
     glutMotionFunc(mouse_movement);
 
@@ -144,10 +179,17 @@ void initOpenGL( void )
  ******************************************************************************/
 void step ( int value )
 {
+    // make speed changes
+
     // apply camera changes  based on what keys are pressed
-	
+    	
+
 	// loop through every body, calling that body's step function
-	
+    for(int i = 0; i < num_bodies; i++)
+        bodies[i].step(speed);
+	for(int i = 0; i < num_belts; i++)
+        belts[i].step(speed);
+
     glutPostRedisplay();
     glutTimerFunc( 1000/fps, step, 0 );
 }
@@ -235,37 +277,131 @@ void keyboard_down( unsigned char key, int x, int y )
 		case 'w':
 			// Rotate forward
 			break;
-		case 'A':
-		case 'a':
-			// Rotate System Left
-			break;
 		case 'S':
 		case 's':
 			// Rotate backward
+			break;
+		case 'A':
+		case 'a':
+			// Rotate System Left
 			break;
 		case 'D':
 		case 'd':
 			// Rotate System Right
 			break;
-		case 'Q':
-		case 'q':
-			// Strafe Left
-			break;
-		case 'E':
-		case 'e':
-			// Strafe Right
-			break;
-		case 'z':
-		case 'Z':
-			// Zoom In
-		case 'x':
-		case 'X':
-			// Zoom Out
-		
+        case 'R':
+        case 'r':
+            // reset
+            break;
+        case 'p':
+        case 'P':
+            // unpause only while p is pressed
+            break;
+        case ' ':
+            // pause or unpause
+            break;
+        case '=':
+        case '+':
+            // speed up the simulation by 10%
+            break;
+        case '-':
+        case '_':
+            // slow down the simulation by 10%
+            break;
         default:
             break;
     }
 }
+
+ /***************************************************************************//**
+ * keyboard_up
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * handles key release events
+ ******************************************************************************/
+void keyboard_up( unsigned char key, int x, int y )
+{
+    switch( key )
+    {
+		case 'W':
+		case 'w':
+			// Stop rotating forward
+			break;
+		case 'S':
+		case 's':
+			// Stop rotating backward
+			break;
+		case 'A':
+		case 'a':
+			// Stop rotating left
+			break;
+		case 'D':
+		case 'd':
+			// Stop rotating right
+			break;
+        case 'p':
+        case 'P':
+            // pause again
+            break;
+        default:
+            break;
+    }
+}
+
+
+ /***************************************************************************//**
+ * special_down
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * handles key press events for arrow keys
+ ******************************************************************************/
+void special_down( int key, int x, int y )
+{
+    switch( key )
+    {
+        case GLUT_KEY_UP:
+            // pan up
+            break;
+        case GLUT_KEY_DOWN:
+            // pan down
+            break;
+        case GLUT_KEY_LEFT:
+            // pan left
+            break;
+        case GLUT_KEY_RIGHT:
+            // pan right
+        default:
+            break;
+    }
+}
+
+ /***************************************************************************//**
+ * special_up
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * handles key release events for special keys
+ ******************************************************************************/
+void special_up( int key, int x, int y )
+{
+    switch( key )
+    {
+        case GLUT_KEY_UP:
+            // stop panning up
+            break;
+        case GLUT_KEY_DOWN:
+            // stop panning down
+            break;
+        case GLUT_KEY_LEFT:
+            // stop panning left
+            break;
+        case GLUT_KEY_RIGHT:
+            // stop panning right
+        default:
+            break;
+    }
+}
+
+
 
  /***************************************************************************//**
  * mouse_action
@@ -367,7 +503,7 @@ void display_wireframe()
 }
 
   /***************************************************************************//**
- * Display Wireframe
+ * Display Texture
  * Authors - Derek Stotz, Charles Parsons
  *
  * Displays planetary system with mapped textures
@@ -375,4 +511,121 @@ void display_wireframe()
 void display_texture()
 {
     
+}
+
+  /***************************************************************************//**
+ * Add Body
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Creates and adds a single body to the body list.  Scaling constants are found here.
+ ******************************************************************************/
+void add_body(
+    const float color[3],
+    double emissivity,      // 0 - 255
+    double radius,          // in km
+    double orbital_radius,  // in millions of km
+    double orbital_period,  // in days
+    double rotation_period  // in hours
+    char* texture_file)
+{
+    Body newBody;
+
+    newBody.color[0] = color[0];
+    newBody.color[1] = color[1];
+    newBody.color[2] = color[2];
+
+    newBody.emissivity = emissivity;
+    newBody.orbital_period = orbital_period / 365;
+    newBody.rotation_period = rotation_period / (365 * 24);
+    newBody.orbital_radius = orbital_radius + 20;
+    newBody.radius = radius / 1000;
+
+    bodies[num_bodies] = newBody;
+    num_bodies++;
+}
+
+
+  /***************************************************************************//**
+ * Add Belt
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Creates and adds a single belt to the belt list
+ ******************************************************************************/
+void add_belt(
+    int count,
+    double min_orbital_period,
+    double max_orbital_period,
+    double min_rotation_period,
+    double max_rotation_period,
+    double min_orbital_radius,
+    double max_orbital_radius,
+    double min_radius,
+    double max_radius)
+{
+    Belt newBelt;
+    newBelt.count = count;
+    newBelt.center.x = center_x;
+    newBelt.center.y = center_y;
+    newBelt.center.z = center_z;
+    
+    newBelt.max_orbital_period = max_orbital_period;
+    newBelt.min_rotation_period = min_rotation_period;
+    newBelt.max_rotation_period = max_rotation_period;
+    newBelt.min_orbital_radius = min_orbital_radius;
+    newBelt.max_orbital_radius = max_orbital_radius;
+    newBelt.min_radius = min_radius;
+    newBelt.max_radius = max_radius;
+
+    newBelt.create_asteroids();
+    belts[num_belts] = newBelt;
+    num_belts++;
+}
+
+  /***************************************************************************//**
+ * Create Solar System
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Creates all bodies in the solar system
+ ******************************************************************************/
+void create_solar_system()
+{
+    // hardcoded system can have up to 10 asteroid belts and up to 100 bodies outside of the asteroid belts
+    add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp" );
+    add_body(White, 0, 2439, 58, 88, 1416, "mercury.bmp" );
+    add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp" );
+    
+    add_body(Blue, 0, 6378, 150, 365, 24, "earth.bmp");
+    bodies[num_bodies].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp");
+    
+    add_body(Red, 0, 3394, 228, 687, 24.6, "mars.bmp");
+    
+    add_belt(200, 300, 700, 10, 10000, 600, 5000, 20, 500, "ceres.bmp");  // asteroid belt
+
+    add_body(Red, 0, 71398, 779, 4332, 9.8, "jupiter.bmp");
+    bodies[num_bodies].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp"); // Io
+    bodies[num_bodies].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp"); // Callisto
+    bodies[num_bodies].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp"); // Europa
+    bodies[num_bodies].add_moon(Green, 0, 2634, 1.07, 7.154, 7.154 * 24, "ganymede.bmp"); //Ganymede
+    
+    add_body(Yellow, 0, 60270, 1424, 10761, 10.2, "saturn.bmp");
+    void add_rings(White, 67270, 140270, "saturnrings.bmp");
+
+    add_body(Cyan, 0, 25550, 2867, 30682, 15.5, "uranus.bmp");
+    add_body(Blue, 0, 24750, 4492, 60195, 15.8, "neptune.bmp");
+    
+    add_belt(1000, 6000, 10000, 10, 10000, 5235, 7479, 20, 1000, "ganymede.bmp"); // kuiper belt
+/*
+    radius distance year day
+Sun 696000 0 0 25
+Mercury 2439 58 88 1416
+Venus 6052 108 225 5832
+Earth 6378 150 365 24
+Mars 3394 228 687 24.6
+Jupiter 71398 779 4332 9.8
+Saturn 60270 1424 10761 10.2
+Uranus 25550 2867 30682 15.5
+Neptune 24750 4492 60195 15.8
+Moon 1738 0.384 27.3 27.3
+*/
+
 }
