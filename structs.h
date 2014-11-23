@@ -1,3 +1,4 @@
+#include <GL/freeglut.h>
 
 // colors {R, G, B}
 const float Black[]	= { 0.0, 0.0, 0.0 };
@@ -8,6 +9,17 @@ const float Magenta[]	= { 1.0, 0.0, 1.0 };
 const float Cyan[]	= { 0.0, 1.0, 1.0 };
 const float Yellow[]	= { 1.0, 1.0, 0.0 };
 const float White[]	= { 1.0, 1.0, 1.0 };
+
+// scalings
+
+const double orbital_period_scale = 1.0/365;
+const double rotation_period_scale = 1.0/(365 * 24);
+const double orbital_radius_scale =  1.0;
+const double orbital_radius_offset = 20;
+const double radius_scale = 1.0/1000;
+
+// global texture used for asteroids
+extern GLubyte asteroid_image[256][512][3];
 
 struct Point
 {
@@ -23,13 +35,29 @@ struct Vector
     double dz;
 };
 
+struct Ring
+{
+    float color[3];
+    GLubyte image[256][512][3];
+    
+    double min_radius;
+    double max_radius;
+};
+
 struct Body
 {
     Point center;
     Point position;
     float color[3];
     double emissivity;
-    Body moons[100];
+    Body *moons;
+
+    GLubyte image[256][512][3];
+
+    bool is_asteroid = false;
+
+    Ring ring;    
+    bool has_ring = false;
 
     int num_moons = 0;
 
@@ -44,7 +72,7 @@ struct Body
 
     void step(double speed);
     void add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file);
-    void add_rings(const float color[3], double minradius, double maxradius, char* texture_file);
+    void add_rings(const float color[3], double minradius, double maxradius, const char* texture_file);
 };
 
 struct Camera
@@ -72,7 +100,8 @@ struct Belt
 {
     int count;
     Point center;
-    Body asteroids[1000];
+    float color[3];    
+    Body asteroids[500];
 
     double min_orbital_period;
     double max_orbital_period;
@@ -87,3 +116,8 @@ struct Belt
     void step(double speed);
     void create_asteroids();
 };
+
+void getTexture(GLubyte image[256][512][3], const char* filename);
+
+// function by Dr. Weiss
+bool LoadBmpFile( const char* filename, int &NumRows, int &NumCols, GLubyte* &ImagePtr );

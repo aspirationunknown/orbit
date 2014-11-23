@@ -23,8 +23,9 @@ Ref: based on code from RgbImage.cc (Buss, 3-D Computer Graphics, 2003).
 
 #include <GL/gl.h>
 #include <stdio.h>
+#include <GL/freeglut.h>
 
-bool LoadBmpFile( const char* filename, int &NumRows, int &NumCols, unsigned char* &ImagePtr );
+bool LoadBmpFile( char* filename, int &NumRows, int &NumCols, GLubyte* &ImagePtr );
 static short readShort( FILE* infile );
 static int readLong( FILE* infile );
 static void skipChars( FILE* infile, int numChars );
@@ -37,7 +38,7 @@ static inline int GetNumBytesPerRow( int NumCols );
  *  Author: Sam Buss December 2001.
  **********************************************************************/
 
-bool LoadBmpFile( const char* filename, int &NumRows, int &NumCols, unsigned char* &ImagePtr )
+bool LoadBmpFile( char* filename, int &NumRows, int &NumCols, GLubyte* &ImagePtr )
 {
     FILE* infile = fopen( filename, "rb" );		// Open for reading binary data
     if ( !infile )

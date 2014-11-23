@@ -107,9 +107,9 @@ void left_up(int x, int y);
 
 void add_body(const float color[3], double emissivity, double radius, double orbital_period, 
     double rotation_period, double orbital_radius, const char* texture_file);
-void add_belt(int count, double min_orbital_period, double max_orbital_period,
+void add_belt(int count, const float color[3], double min_orbital_period, double max_orbital_period,
     double min_rotation_period, double max_rotation_period, double min_orbital_radius,
-    double max_orbital_radius,double min_radius, double max_radius, const char* texture_file);
+    double max_orbital_radius,double min_radius, double max_radius);
 void create_solar_system();
 
 // display functions
@@ -117,7 +117,7 @@ void display();
 void display_smooth();
 void display_flat();
 void display_wireframe();
-void display_textured();
+void display_texture();
  
  /***************************************************************************//**
  * main
@@ -218,7 +218,7 @@ void display( void )
             display_wireframe();
             break;
         default:
-			display_textured();
+			display_texture();
             break;
     }
 
@@ -524,10 +524,12 @@ void add_body(
     newBody.color[2] = color[2];
 
     newBody.emissivity = emissivity;
-    newBody.orbital_period = orbital_period / 365;
-    newBody.rotation_period = rotation_period / (365 * 24);
-    newBody.orbital_radius = orbital_radius + 20;
-    newBody.radius = radius / 1000;
+    newBody.orbital_period = orbital_period * orbital_period_scale;
+    newBody.rotation_period = rotation_period * rotation_period_scale;
+    newBody.orbital_radius = orbital_radius * orbital_radius_scale + orbital_radius_offset;
+    newBody.radius = radius * radius_scale;
+
+    getTexture(newBody.image, texture_file);
 
     bodies[num_bodies] = newBody;
     num_bodies++;
@@ -542,6 +544,7 @@ void add_body(
  ******************************************************************************/
 void add_belt(
     int count,
+    const float color[3],
     double min_orbital_period,
     double max_orbital_period,
     double min_rotation_period,
@@ -549,8 +552,7 @@ void add_belt(
     double min_orbital_radius,
     double max_orbital_radius,
     double min_radius,
-    double max_radius,
-    const char* texture_file)
+    double max_radius)
 {
     Belt newBelt;
     newBelt.count = count;
@@ -577,18 +579,24 @@ void add_belt(
 void create_solar_system()
 {
     // hardcoded system can have up to 10 asteroid belts and up to 100 bodies outside of the asteroid belts
+
+    // load the static texture
+    getTexture(asteroid_image, "ceres.bmp");
+
     add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp" );
     add_body(White, 0, 2439, 58, 88, 1416, "mercury.bmp" );
     add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp" );
     
     add_body(Blue, 0, 6378, 150, 365, 24, "earth.bmp");
+    bodies[num_bodies-1].moons = new Body[1];    
     bodies[num_bodies-1].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp");
     
     add_body(Red, 0, 3394, 228, 687, 24.6, "mars.bmp");
     
-    add_belt(200, 300, 700, 10, 10000, 600, 5000, 20, 500, "ceres.bmp");  // asteroid belt
+    add_belt(100, White, 300, 700, 10, 10000, 600, 5000, 20, 500);  // asteroid belt
 
     add_body(Red, 0, 71398, 779, 4332, 9.8, "jupiter.bmp");
+    bodies[num_bodies-1].moons = new Body[4];
     bodies[num_bodies-1].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp"); // Io
     bodies[num_bodies-1].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp"); // Callisto
     bodies[num_bodies-1].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp"); // Europa
@@ -600,7 +608,8 @@ void create_solar_system()
     add_body(Cyan, 0, 25550, 2867, 30682, 15.5, "uranus.bmp");
     add_body(Blue, 0, 24750, 4492, 60195, 15.8, "neptune.bmp");
     
-    add_belt(1000, 6000, 10000, 10, 10000, 5235, 7479, 20, 1000, "ganymede.bmp"); // kuiper belt
+    add_belt(500, White, 6000, 10000, 10, 10000, 5235, 7479, 20, 1000); // kuiper belt
+
 /*
     radius distance year day
 Sun 696000 0 0 25

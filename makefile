@@ -23,7 +23,7 @@ GL_LIBS = -lglut -lGLU -lGL -lm
 OBJS = solar.o solarGraphics.o structs.o bmpRead.o
 
 
-solar: solar.o solarGraphics.o structs.o bmpRead.o 
+solar: solar.o solarGraphics.o structs.o bmpRead.o
 
 	g++ ${OBJS} ${CXXFLAGS} -o solar ${GL_LIBS}
 
@@ -33,7 +33,7 @@ bmpRead.o: bmpRead.cpp
 	g++ ${CXXFLAGS} -c bmpRead.cpp ${GL_LIBS}
 
 
-solar.o: solar.cpp solar.h bmpRead.o
+solar.o: solar.cpp solar.h
 
 	g++ ${CXXFLAGS} -c solar.cpp ${GL_LIBS}
 
@@ -43,7 +43,7 @@ solarGraphics.o: solarGraphics.cpp solar.h
 	g++ ${CXXFLAGS} -c solarGraphics.cpp ${GL_LIBS}
 
 
-structs.o: structs.cpp structs.h
+structs.o: structs.cpp structs.h bmpRead.o
 
 	g++ ${CXXFLAGS} -c structs.cpp ${GL_LIBS}
 
