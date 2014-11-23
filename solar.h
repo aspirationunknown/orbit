@@ -12,3 +12,7 @@ const int EscapeKey = 27;
 enum mode {SMOOTH, FLAT, WIREFRAME, TEXTURE};
 
 //function prototypes
+drawOrbit(Body body);
+drawSmooth(Body body);
+drawTextured(Body body);
+drawWired(Body body);
