@@ -87,7 +87,9 @@ mode current_mode = TEXTURE;
 int ScreenWidth = 1280;
 int ScreenHeight = 512;
 int fps = 60;
-int speed = 1.0;
+double speed = 1.0;
+double camera_speed = 10.0;
+bool paused = false;
 
 // solar system
 Camera camera;
@@ -100,6 +102,7 @@ int num_belts = 0;
 void initOpenGL();
 void step( int value);
 void reshape( int w, int h );
+void create_camera();
 void keyboard_down( unsigned char key, int x, int y);
 void keyboard_up( unsigned char key, int x, int y);
 void special_up( int key, int x, int y );
@@ -186,15 +189,41 @@ void initOpenGL( void )
 void step ( int value )
 {
     // make speed changes
-
+    if(controller.plus)
+    {
+        controller.plus = false;
+        speed += .1;
+    }
+    else if (controller.minus)
+    {
+        controller.minus = false;
+        speed -= .1;
+    }
     // apply camera changes  based on what keys are pressed
-    	
+    if(controller.w)    camera.pan_forward(camera_speed);
+    if(controller.a)    camera.pan_left(camera_speed);
+    if(controller.s)    camera.pan_backward(camera_speed);
+    if(controller.d)    camera.pan_right(camera_speed);
+    
+    if(controller.r)
+    {
+        create_camera();
+        controller.r = false;
+    }
+    
+    if(controller.up)   camera.rotate_up(camera_speed / 10);
+    if(controller.down) camera.rotate_down(camera_speed / 10);
+    if(controller.left) camera.rotate_left(camera_speed / 10);
+    if(controller.right)camera.rotate_right(camera_speed / 10);
 
 	// loop through every body, calling that body's step function
-    for(int i = 0; i < num_bodies; i++)
-        bodies[i].step(speed);
-	for(int i = 0; i < num_belts; i++)
-        belts[i].step(speed);
+    if (!paused)
+    {
+        for(int i = 0; i < num_bodies; i++)
+            bodies[i].step(speed);
+	    for(int i = 0; i < num_belts; i++)
+            belts[i].step(speed);
+    }
 
     glutPostRedisplay();
     glutTimerFunc( 1000/fps, step, 0 );
@@ -292,9 +321,11 @@ void keyboard_down( unsigned char key, int x, int y )
         case 'p':
         case 'P':
             controller.p = true;
+            paused = false;
             break;
         case ' ':
             controller.space = true;
+            paused = true;
             break;
         case '=':
         case '+':
@@ -344,9 +375,11 @@ void keyboard_up( unsigned char key, int x, int y )
         case 'p':
         case 'P':
             controller.p = false;
+            paused = true;
             break;
         case ' ':
             controller.space = false;
+            paused = false;
             break;
         case '=':
         case '+':
@@ -476,7 +509,7 @@ void right_up(int x, int y)
 void display_flat()
 {
     for(int i = 0; i < num_bodies; i++)
-    {
+    {   drawOrbit(bodies[i]);
         drawFlat(bodies[i]);
     }
     for(int i = 0; i < num_belts; i++)
@@ -594,11 +627,10 @@ void add_belt(
  * Create Solar System
  * Authors - Derek Stotz, Charles Parsons
  *
- * Creates all bodies in the solar system
+ * Creates the initial camera state
  ******************************************************************************/
-void create_solar_system()
+void create_camera()
 {
-    // add the camera
     camera.position.x = 100;
     camera.position.y = 0;
     camera.position.z = 50;
@@ -613,6 +645,18 @@ void create_solar_system()
     camera.up.dx = 0;
     camera.up.dy = 0;
     camera.up.dz = -1;
+}
+
+  /***************************************************************************//**
+ * Create Solar System
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Creates all bodies in the solar system
+ ******************************************************************************/
+void create_solar_system()
+{
+    // add the camera
+    create_camera();
 
     // hardcoded system can have up to 10 asteroid belts and up to 100 bodies outside of the asteroid belts
 

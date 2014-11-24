@@ -39,7 +39,7 @@ enum mode {SMOOTH, FLAT, WIREFRAME, TEXTURE};
 
 //function prototypes
 void drawFlat(Body body);
-void drawOrbit();
+void drawOrbit(Body body);
 void drawSmooth(Body body);
 void drawTextured(Body body);
 void drawWired(Body body);
