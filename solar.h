@@ -8,6 +8,10 @@
 //keys
 const int EscapeKey = 27;
 
+//globals
+GLUquadricObj* sphere;
+GLUquadricObj* ring;
+
 //screens
 enum mode {SMOOTH, FLAT, WIREFRAME, TEXTURE};
 
