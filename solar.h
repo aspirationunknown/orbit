@@ -4,6 +4,7 @@
 #include <string>
 #include "structs.h"
 #include <GL/freeglut.h>
+#include <cmath>
 
 // global texture used for asteroids
 extern GLubyte* asteroid_image;
@@ -30,16 +31,16 @@ struct Keyboard
 //keys
 const int EscapeKey = 27;
 
-//globals
-GLUquadricObj* sphere;
-GLUquadricObj* ring;
 
 //screens
 enum mode {SMOOTH, FLAT, WIREFRAME, TEXTURE};
 
 //function prototypes
 void drawFlat(Body body);
-void drawOrbit();
+void drawOrbit(Body body);
 void drawSmooth(Body body);
+void drawSmoothRing(Body body);
 void drawTextured(Body body);
+void drawTexturedRing(Body body);
 void drawWired(Body body);
+void drawWiredRing(Body body);
