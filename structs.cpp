@@ -3,6 +3,7 @@
 #include <time.h>
 #include <cmath>
 #include <string>
+#include <iostream>
 
 int getRand(int min, int max)
 {
@@ -14,13 +15,13 @@ double getRandRadians()
     return (((double)rand()) / RAND_MAX) * M_PI;
 }
 
-void getTexture(GLubyte image[256][512][3], const char* filename)
+void getTexture(GLubyte* image, const char* filename)
 {
     std::string name(filename);
     int num_rows = 256;
     int num_cols = 512;
     // currently not working
-    //LoadBmpFile( ("./resources/" + name).c_str(), num_rows, num_cols, image );
+    LoadBmpFile( ("./resources/" + name).c_str(), num_rows, num_cols, image );
 }
 
 void Body::add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file)
@@ -46,7 +47,20 @@ void Body::add_moon(const float color[3], double emissivity, double radius, doub
 
 void Body::step( double speed )
 {
+    // since the framerate is 60 fps
+    double increment = speed * (2 * M_PI) / this->orbital_period / 60;
+    this-> orbital_rotation += increment;
 
+    // update the position
+
+    this->position.x = this->center.x + cos( this->orbital_rotation ) * this->orbital_radius;
+    this->position.y = this->center.y + sin( this->orbital_rotation ) * this->orbital_radius;
+
+    // update the centers of the moons
+    for (int i = 0; i < this->num_moons; i++)
+    {
+        this->moons[i].center = this->position;
+    }    
 }
 
 void Belt::step( double speed )
@@ -96,3 +110,54 @@ void Belt::create_asteroids()
     }
 }
 
+void Camera::rotate_left(double r)
+{
+    
+}
+void Camera::rotate_right(double r)
+{
+
+}
+void Camera::rotate_up(double r)
+{
+
+}
+void Camera::rotate_down(double r)
+{
+
+}
+void Camera::pan_forward(int d)
+{
+    Vector forward;
+    forward.dx = look_at.x - position.x;
+    forward.dy = look_at.y - position.y;
+    forward.dz = look_at.z - position.z;
+    forward.normalize();
+    
+    this->position.x += forward.dx;
+    this->position.y += forward.dy;
+    this->position.z += forward.dz;
+}
+void Camera::pan_backward(int d)
+{
+    this->pan_forward(-1 * d);
+}
+void Camera::pan_left(int d)
+{
+    this->position.x += this->left.dx;
+    this->position.y += this->left.dy;
+
+    this->look_at.x += this->left.dx;
+    this->look_at.y += this->left.dy;
+}
+void Camera::pan_right(int d)
+{
+    this->pan_left(-1 * d);
+}
+void Vector::normalize()
+{
+    double magnitude = sqrt((this->dx)*(this->dx) + (this->dy)*(this->dy) + (this->dz)*(this->dz));
+    this->dx / magnitude;
+    this->dy / magnitude;
+    this->dz / magnitude;
+}
