@@ -18,9 +18,6 @@ const double orbital_radius_scale =  1.0;
 const double orbital_radius_offset = 20;
 const double radius_scale = 1.0/1000;
 
-// global texture used for asteroids
-extern GLubyte asteroid_image[256][512][3];
-
 struct Point
 {
     int x;
@@ -33,12 +30,14 @@ struct Vector
     double dx;
     double dy;
     double dz;
+
+    void normalize();
 };
 
 struct Ring
 {
     float color[3];
-    GLubyte image[256][512][3];
+    GLubyte* image;
     
     double min_radius;
     double max_radius;
@@ -52,7 +51,7 @@ struct Body
     double emissivity;
     Body *moons;
 
-    GLubyte image[256][512][3];
+    GLubyte* image;
 
     bool is_asteroid = false;
 
@@ -81,9 +80,7 @@ struct Camera
     Point position;
 
     Vector left;
-    Vector right;
     Vector up;
-    Vector down;
 
     void rotate_left(double r);
     void rotate_right(double r);
@@ -117,7 +114,7 @@ struct Belt
     void create_asteroids();
 };
 
-void getTexture(GLubyte image[256][512][3], const char* filename);
+void getTexture(GLubyte* image, const char* filename);
 
 // function by Dr. Weiss
 bool LoadBmpFile( const char* filename, int &NumRows, int &NumCols, GLubyte* &ImagePtr );

@@ -71,13 +71,16 @@
  *
  ******************************************************************************/
 #include "solar.h"
+#include <iostream>
 #include <cmath>
 
 using namespace std;
 
 // I/O
+Keyboard controller;
 Point mouse_point;
 bool mouse_pressed = false;
+GLubyte* asteroid_image = NULL;
 
 // screen state
 mode current_mode = TEXTURE;
@@ -87,6 +90,7 @@ int fps = 60;
 int speed = 1.0;
 
 // solar system
+Camera camera;
 Body bodies[100];
 Belt belts[10];
 int num_bodies = 0;
@@ -94,7 +98,6 @@ int num_belts = 0;
 
 // function prototypes
 void initOpenGL();
-void screenSetup();
 void step( int value);
 void reshape( int w, int h );
 void keyboard_down( unsigned char key, int x, int y);
@@ -132,7 +135,7 @@ void display_texture();
 int main ( int argc, char *argv[] )
 {
     // start displaying
-    screenSetup();
+    create_solar_system();
     glutInit(&argc, argv);
     initOpenGL();
     glutMainLoop();    
@@ -254,17 +257,6 @@ void reshape( int w, int h )
 }
 
  /***************************************************************************//**
- * screenSetup
- * Authors - Derek Stotz, Charles Parsons
- *
- * Sets up the objects to be used in the screen modes
- ******************************************************************************/
-void screenSetup()
-{
-
-}
-
- /***************************************************************************//**
  * keyboard_down
  * Authors - Derek Stotz, Charles Parsons
  *
@@ -272,44 +264,45 @@ void screenSetup()
  ******************************************************************************/
 void keyboard_down( unsigned char key, int x, int y )
 {
+    std::cout << endl << key << " pressed" << std::endl;
     switch( key )
     {
         case 27:
             exit ( 0 );
 		case 'W':
 		case 'w':
-			// Rotate forward
+            controller.w = true;
 			break;
 		case 'S':
 		case 's':
-			// Rotate backward
+            controller.s = true;
 			break;
 		case 'A':
 		case 'a':
-			// Rotate System Left
+            controller.a = true;
 			break;
 		case 'D':
 		case 'd':
-			// Rotate System Right
+            controller.d = true;
 			break;
         case 'R':
         case 'r':
-            // reset
+            controller.r = true;
             break;
         case 'p':
         case 'P':
-            // unpause only while p is pressed
+            controller.p = true;
             break;
         case ' ':
-            // pause or unpause
+            controller.space = true;
             break;
         case '=':
         case '+':
-            // speed up the simulation by 10%
+            controller.plus = true;
             break;
         case '-':
         case '_':
-            // slow down the simulation by 10%
+            controller.minus = true;
             break;
         default:
             break;
@@ -324,33 +317,49 @@ void keyboard_down( unsigned char key, int x, int y )
  ******************************************************************************/
 void keyboard_up( unsigned char key, int x, int y )
 {
+
+    std::cout << endl << key << " released" << std::endl;
     switch( key )
     {
 		case 'W':
 		case 'w':
-			// Stop rotating forward
+            controller.w = false;
 			break;
 		case 'S':
 		case 's':
-			// Stop rotating backward
+            controller.s = false;
 			break;
 		case 'A':
 		case 'a':
-			// Stop rotating left
+            controller.a = false;
 			break;
 		case 'D':
 		case 'd':
-			// Stop rotating right
+            controller.d = false;
 			break;
+        case 'R':
+        case 'r':
+            controller.r = false;
+            break;
         case 'p':
         case 'P':
-            // pause again
+            controller.p = false;
+            break;
+        case ' ':
+            controller.space = false;
+            break;
+        case '=':
+        case '+':
+            controller.plus = false;
+            break;
+        case '-':
+        case '_':
+            controller.minus = false;
             break;
         default:
             break;
     }
 }
-
 
  /***************************************************************************//**
  * special_down
@@ -466,7 +475,17 @@ void right_up(int x, int y)
  ******************************************************************************/
 void display_flat()
 {
-    
+    for(int i = 0; i < num_bodies; i++)
+    {
+        drawFlat(bodies[i]);
+    }
+    for(int i = 0; i < num_belts; i++)
+    {
+        for(int j = 0; j < belts[i].count; j++)
+        {
+            drawFlat(belts[i].asteroids[j]);
+        }
+    }
 }
 
  /***************************************************************************//**
@@ -533,6 +552,7 @@ void add_body(
 
     bodies[num_bodies] = newBody;
     num_bodies++;
+    std::cout << "\ncreated body with texture " << texture_file << "\n";
 }
 
 
@@ -578,6 +598,22 @@ void add_belt(
  ******************************************************************************/
 void create_solar_system()
 {
+    // add the camera
+    camera.position.x = 100;
+    camera.position.y = 0;
+    camera.position.z = 50;
+    camera.look_at.x = 0;
+    camera.look_at.y = 0;
+    camera.look_at.z = 0;
+
+    camera.left.dx = 0;
+    camera.left.dy = -1;
+    camera.left.dz = 0;
+
+    camera.up.dx = 0;
+    camera.up.dy = 0;
+    camera.up.dz = -1;
+
     // hardcoded system can have up to 10 asteroid belts and up to 100 bodies outside of the asteroid belts
 
     // load the static texture
