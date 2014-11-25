@@ -145,7 +145,7 @@ void cameraFunction(Camera camera)
 
 void displayLabel(Body body)
 {
-    drawBitmapString(body.name, body.position.x, body.position.y, -body.radius - 5.0, White);
+    drawBitmapString(body.name.c_str(), body.position.x, body.position.y, -body.radius - 5.0, White);
 }
 
  /***************************************************************************//**
