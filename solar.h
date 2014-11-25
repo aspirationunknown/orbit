@@ -13,19 +13,19 @@ extern GLubyte* asteroid_image;
 
 struct Keyboard
 {
-	bool w;
-	bool s;
-	bool a;
-	bool d;
-    bool r;
-    bool p;
-    bool space;
-    bool plus;
-    bool minus;
-    bool left;
-    bool right;
-    bool up;
-    bool down;
+	bool w = false;
+	bool s = false;
+	bool a = false;
+	bool d = false;
+    bool r = false;
+    bool p = false;
+    bool space = false;
+    bool plus = false;
+    bool minus = false;
+    bool left = false;
+    bool right = false;
+    bool up = false;
+    bool down = false;
 };
 
 //keys

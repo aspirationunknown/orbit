@@ -75,8 +75,8 @@ void drawOrbit(Body body)
     glColor3fv(White);
     for(i = 0; i < 360; ++i)
     {
-        glVertex3f(body.orbital_radius * cos(i * M_PI / 360.0), body.orbital_radius * sin(i * M_PI / 360.0), 0.0);
-        glVertex3f(body.orbital_radius * cos((i + 1) * M_PI / 360.0), body.orbital_radius * sin((i + 1) * M_PI / 360.0), 0.0);
+        glVertex3f(body.orbital_radius * cos(i * M_PI / 180.0), body.orbital_radius * sin(i * M_PI / 180.0), 0.0);
+        glVertex3f(body.orbital_radius * cos((i + 1) * M_PI / 180.0), body.orbital_radius * sin((i + 1) * M_PI / 180.0), 0.0);
     } 
     glEnd();
 }
@@ -139,8 +139,7 @@ void drawFlat(Body body)
 
 void cameraFunction(Camera camera)
 {
-    gluPerspective(45.0, 0.5, 0.0, 100000.0);
-    gluLookAt(50.0, 50.0, 50.0, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0);
+    gluLookAt(camera.position.x, camera.position.y, camera.position.z, camera.look_at.x, camera.look_at.y, camera.look_at.z, camera.up.dx, camera.up.dy, camera.up.dz);
 }
 
 void displayLabel(Body body)

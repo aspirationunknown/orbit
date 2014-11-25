@@ -89,7 +89,7 @@ int ScreenHeight = 512;
 int fps = 60;
 double speed = 1.0;
 double camera_speed = 10.0;
-bool paused = false;
+bool paused = true;
 
 // solar system
 Camera camera;
@@ -161,7 +161,7 @@ int main ( int argc, char *argv[] )
  ******************************************************************************/
 void initOpenGL( void )
 {
-    glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE );     // 32-bit graphics and double buffering
+    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );     // 32-bit graphics and double buffering
 
     glutInitWindowSize( ScreenWidth, ScreenHeight );    // initial window size
     glutInitWindowPosition( 100, 50 );                  // initial window position
@@ -173,11 +173,17 @@ void initOpenGL( void )
     glutSpecialUpFunc( special_up );
     glutSpecialFunc( special_down );
 
+    CreateMenus();
+
     glClearColor( 0.0, 0.0, 0.0, 1.0 );                 // use black for glClear command
     glutDisplayFunc( display );
     glutReshapeFunc( reshape );
     glutTimerFunc( 1000/fps, step, 0 );
-    CreateMenus();
+    
+    glMatrixMode( GL_PROJECTION );      // use an orthographic projection
+    glLoadIdentity();
+
+    //glClearColor(1.0, 1.0, 1.0, 1.0);
 }
 
 
@@ -224,7 +230,6 @@ void step ( int value )
 	// loop through every body, calling that body's step function
     if (!paused)
     {
-        std::cout << "\nMOVING SHIT\n";
         for(int i = 0; i < num_bodies; i++)
             bodies[i].step(speed);
 	    for(int i = 0; i < num_belts; i++)
@@ -243,7 +248,10 @@ void step ( int value )
  ******************************************************************************/
 void display( void )
 {
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glLoadIdentity();
+    cameraFunction(camera);
     switch( current_mode )
     {
         case SMOOTH:
@@ -260,6 +268,7 @@ void display( void )
             break;
     }
 
+    glFrontFace( GL_CW );
     glutSwapBuffers();
     glFlush();
 
@@ -278,13 +287,10 @@ void display( void )
 void reshape( int w, int h )
 {
     // orthographic projection of 3-D scene onto 2-D, maintaining aspect ratio
+    glViewport( 0, 0, w, h );           // adjust viewport to new window
     glMatrixMode( GL_PROJECTION );      // use an orthographic projection
     glLoadIdentity();                   // initialize transformation matrix
-    if ( w > h )                        // use width:height aspect ratio to specify view extents
-        gluOrtho2D( - ScreenWidth, ScreenWidth, - ScreenHeight, ScreenHeight );
-    else
-        gluOrtho2D( - ScreenWidth, ScreenWidth, -ScreenHeight, ScreenHeight );
-    glViewport( 0, 0, w, h );           // adjust viewport to new window
+    gluPerspective(30.0, ScreenWidth/ScreenHeight, 1.0, 100000.0);
 
     // switch back to (default) model view mode, for transformations
     glMatrixMode( GL_MODELVIEW );
@@ -583,9 +589,9 @@ void add_belt(
 void create_camera()
 {
     speed = 1.0;
-    camera.position.x = 100;
+    camera.position.x = 0;
     camera.position.y = 0;
-    camera.position.z = 50;
+    camera.position.z = 1000;
     camera.look_at.x = 0;
     camera.look_at.y = 0;
     camera.look_at.z = 0;
@@ -595,8 +601,8 @@ void create_camera()
     camera.left.dz = 0;
 
     camera.up.dx = 0;
-    camera.up.dy = 0;
-    camera.up.dz = -1;
+    camera.up.dy = -1;
+    camera.up.dz = 0;
 }
 
   /***************************************************************************//**
