@@ -1,0 +1,96 @@
+ * solar.cpp
+ *
+ * Assignment - PA 3 - solar
+ *
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Date - November 24, 2014
+ *
+ * Instructor - Dr. Weiss
+ *
+ * Course - CSC 433
+ *
+ * Location - McLaury - Room 313
+ *
+ *
+ * Usage - 
+            To Compile: make
+            To Run: ./solar
+
+            This application is a simplified model solar system.  It is not entierly accurate to scale, for usability reasons,
+            but it gives a decent overview.
+
+            Controls:
+
+                - W: Pan forward
+                - S: Pan backward
+                - A: Pan left
+                - D: Pan Right
+
+                - Shift: Slow down camera movement
+
+                - Z: Zoom in
+                - X: Zoom out
+
+                - >: increase polygon fidelity
+                - <: reduce polygon fidelity
+
+                - Up: Lower the angle of view
+                - Down: Raise the angle of view
+
+                - R: Reset the camera position and the speed
+                - Space: Pause / Play
+                - P: Pause and move forward slowly while p is pressed
+
+                - +: speed up the simulation
+                - -: slow down the simulation
+
+                - TAB: go to next planet
+
+            Press Esc to end the program.
+                
+                        
+ * Details -  
+            The structure of solar is somewhat modular.  The main file, solar.cpp, holds all
+            global variables and callback functions, other than the fidelity of the polygons and
+            the shared asteroid texture. The state of the application is determined by a mode enum.
+            There are four modes:
+
+                - SMOOTH: Draw the planets in the solar system with the smooth shading model.
+                - FLAT: Draw the planets in the solar system with the flat shading model.
+                - WIREFRAME: Draw the planets in the solar system as wireframes.
+                - TEXTURE: Draw the planets in the solar system with mapped textures.
+            
+            Switch statements in the display and step functions determine which screen is drawn.
+            Keyboard I/O is handled in statements and applied in the update steps, and the keyboard state is stored
+            in a struct which can be found in solar.h.  A camera object stores current camera
+            information and has some functionality which allows the camera to navigate the environment.
+
+            Standard openGL dropdown menus are used for mode selection, and the menu callback function can be found
+            in solar.cpp.
+
+            All graphical functions, from drawing planets to mapping textures and displaying text, are found in
+            solarGraphics.cpp.  It makes use of const colors and object classes found in structs.h. solar.h links
+            together solarGraphics.h and solar.cpp so both files may make use of the structs found in structs.h and their
+            functionaliy found in structs.cpp.
+
+            structs.h holds the Camera, Belt, Point, Vector, and Body structs.  The camera class is a singleton, and is mostly 
+            there for code reuse and cleanliness.  The body class is reused for every body in the solar system, and includes options for
+            nested orbitals, emissivity and rings.
+
+Extra Credit -
+            
+        1.  There is a randomly generated asteroid belt and kuiper belt in the simulation.
+        2.  The Gallilean moons and Titan are represented with correct ordering and orbital periods.
+        3.  Pressing TAB jumps to the next planet in the list, starting at the sun and ending at Neptune.  Pressing TAB
+                after jumping to Neptune jumps the user to Sol.
+ *
+ * Issues and Bugs - 
+
+        While we started out strong on this project, issues we ran into near the end led to a delivery of an incomplete program.
+        
+        1.  For unknown reasons, the program segmentation faults when trying to map a stored texture.  We implemented a Texture mode, but removed it due to this reason.
+        2.  Our controls are slightly lacking, as impelmentation of better controls was de-prioritized in favor of the texture mapping.
+        3.  The rings of Saturn do not appear.
+        4.  The lighting directionality seems incorrect.
+

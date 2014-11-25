@@ -49,7 +49,7 @@ struct Body
     Point center;
     Point position;
     float color[3];
-    double emissivity;
+    double emissivity = 0.0;
     Body *moons;
 
     GLubyte* image;

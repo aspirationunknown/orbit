@@ -28,6 +28,7 @@ struct Keyboard
     bool shift = false;
     bool lessthan = false;
     bool greaterthan = false;
+    bool tab = false;
 };
 
 //keys

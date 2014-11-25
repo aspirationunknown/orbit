@@ -46,6 +46,8 @@
                 - +: speed up the simulation
                 - -: slow down the simulation
 
+                - TAB: go to next planet
+
             Press Esc to end the program.
                 
                         
@@ -76,10 +78,22 @@
             structs.h holds the Camera, Belt, Point, Vector, and Body structs.  The camera class is a singleton, and is mostly 
             there for code reuse and cleanliness.  The body class is reused for every body in the solar system, and includes options for
             nested orbitals, emissivity and rings.
+
+Extra Credit -
+            
+        1.  There is a randomly generated asteroid belt and kuiper belt in the simulation.
+        2.  The Gallilean moons and Titan are represented with correct ordering and orbital periods.
+        3.  Pressing TAB jumps to the next planet in the list, starting at the sun and ending at Neptune.  Pressing TAB
+                after jumping to Neptune jumps the user to Sol.
  *
  * Issues and Bugs - 
 
+        While we started out strong on this project, issues we ran into near the end led to a delivery of an incomplete program.
         
+        1.  For unknown reasons, the program segmentation faults when trying to map a stored texture.
+        2.  Our controls are slightly lacking, as impelmentation of better controls was de-prioritized in favor of the texture mapping.
+        3.  The rings of Saturn do not appear.
+        4.  The lighting directionality seems incorrect.
             
  *
  ******************************************************************************/
@@ -117,6 +131,7 @@ Body bodies[100];
 Belt belts[10];
 int num_bodies = 0;
 int num_belts = 0;
+int current_body = 0;
 
 // for help
 const char* open_readme_command = "xdg-open README";
@@ -160,6 +175,7 @@ void display_texture();
  * Parameters - 
             argc - the number of arguments from the command prompt.
             argv - the command line arguments.
+        Command line arguments are unused in this program.
  ******************************************************************************/
 int main ( int argc, char *argv[] )
 {
@@ -264,6 +280,23 @@ void step ( int value )
     
     if(controller.up)   camera.rotate_up(camera_speed / 10);
     if(controller.down) camera.rotate_down(camera_speed / 10);
+    if(controller.tab)
+    {
+        controller.tab = false;
+        int dx = bodies[current_body].position.x - camera.position.x;
+        int dy = bodies[current_body].position.y - camera.position.y;
+
+        camera.position.x += dx;
+        camera.position.y += dy;
+
+        camera.look_at.x = bodies[current_body].position.x;
+        camera.look_at.y = bodies[current_body].position.y;
+
+        camera.position.z = 500;
+        paused = true;
+
+        current_body = (current_body + 1) % num_bodies;
+    }
 
 	// loop through every body, calling that body's step function
     if (!paused)
@@ -412,6 +445,8 @@ void keyboard_down( unsigned char key, int x, int y )
         case '<':
             controller.lessthan = true;
             break;
+        case 9:
+            controller.tab = true;
         default:
             break;
     }
@@ -471,6 +506,8 @@ void keyboard_up( unsigned char key, int x, int y )
         case '_':
             controller.minus = false;
             break;
+        case 9:
+            controller.tab = false;
         default:
             break;
     }
@@ -636,6 +673,7 @@ void display_texture()
         for(int j = 0; j < belts[i].count; j++)
         {
             //drawTextured(belts[i].asteroids[j]);
+            drawSmooth(belts[i].asteroids[j]);
         }
     }
 }
@@ -777,6 +815,8 @@ void create_solar_system()
     
     add_body(Yellow, 0, 30270, 1174, 10761, 10.2, "saturn.bmp", "Saturn");
     bodies[num_bodies-1].add_rings(White, 67270, 140270, "saturnrings.bmp");
+    bodies[num_bodies-1].moons = new Body[1];
+    bodies[num_bodies-1].add_moon(Yellow, 0, 2576, 6.2, 15.94, 15.94 * 24, "moon.bmp", "Titan");
 
     add_body(Cyan, 0, 12550, 1717, 30682, 15.5, "uranus.bmp", "Uranus");
     add_body(Blue, 0, 11750, 2642, 60195, 15.8, "neptune.bmp", "Neptune");
@@ -847,7 +887,7 @@ void MainMenuHandler( int item )
             current_mode = WIREFRAME;
             break;
         case 4:
-            current_mode = TEXTURE;
+            //current_mode = TEXTURE;
             break;
         case 5:
             if(system(open_readme_command_gedit) != 0)
