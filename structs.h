@@ -15,9 +15,9 @@ const float White[]	= { 1.0, 1.0, 1.0 };
 
 const double orbital_period_scale = 1.0/365;
 const double rotation_period_scale = 1.0/(365 * 24);
-const double orbital_radius_scale =  10;
+const double orbital_radius_scale =  1.0;
 const double orbital_radius_offset = 0;
-const double radius_scale = 1.0/2000;
+const double radius_scale = 1.0/1000.0;
 
 struct Point
 {

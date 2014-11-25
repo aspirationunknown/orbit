@@ -11,7 +11,7 @@ int getRand(int min, int max)
 
 double getRandRadians()
 {
-    return (((double)rand()) / RAND_MAX) * M_PI;
+    return (((double)rand()) / RAND_MAX) * 2 * M_PI;
 }
 
 void getTexture(GLubyte* image, const char* filename)
@@ -52,6 +52,9 @@ void Body::step( double speed )
     double increment = speed * (2 * M_PI) / this->orbital_period / 60;
     this-> orbital_rotation += increment;
 
+    increment = speed * (2 * M_PI) / this->rotation_period / 60;
+    this-> rotation += increment;
+
     // update the position
 
     this->position.x = this->center.x + cos( this->orbital_rotation ) * this->orbital_radius;
@@ -61,6 +64,7 @@ void Body::step( double speed )
     for (int i = 0; i < this->num_moons; i++)
     {
         this->moons[i].center = this->position;
+        this->moons[i].step(speed);
     }    
 }
 

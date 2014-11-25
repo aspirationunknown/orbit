@@ -1,13 +1,22 @@
 #include "solar.h"
 
+//externs
+
+// global texture used for asteroids
+extern GLubyte* asteroid_image;
+
+// fidelity of wireframes
+extern int fidelity;
+
 //drawWireSpheres
 //glutWireSphere(GLdouble radius, GLint slices, GLint stacks); slices = longitude, stacks = lattitude
 void drawWired(Body body)
 {
     glPushMatrix();
       glTranslatef(body.position.x, body.position.y, body.position.z);
+      glRotatef(360 * body.rotation / (2 * M_PI), 0 , 0, 1 );
       glColor3fv(body.color);
-      glutWireSphere(body.radius, 50, 50);
+      glutWireSphere(body.radius, fidelity, fidelity);
     glPopMatrix();
 
     if(body.has_ring == true)
@@ -30,7 +39,7 @@ void drawSmooth(Body body)
       gluQuadricNormals( sphere, GLU_SMOOTH );//creates normals for all verticies
       gluQuadricTexture( sphere, GL_TRUE );
       glColor3fv(body.color);
-      gluSphere(sphere, body.radius, 50, 50);
+      gluSphere(sphere, body.radius, fidelity, fidelity);
     glPopMatrix();
 
     if(body.has_ring == true)
@@ -89,8 +98,6 @@ void drawOrbit(Body body)
     //body.center is center of orbit
     //body.orbital_radius
     int i;
-    
-    displayLabel(body);
     glBegin(GL_LINES);
     glColor3fv(White);
     for(i = 0; i < 360; ++i)
@@ -116,7 +123,7 @@ void drawTexturedRing(Body body)
     gluQuadricNormals( ring, GLU_SMOOTH );//creates normals for all verticies
     gluQuadricTexture( ring, GL_TRUE );//creates texture coordinates
     //need to set center of ring to center of body
-    gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, 20, 20);
+    gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, fidelity, fidelity);
     
 }
 
@@ -158,7 +165,7 @@ void drawFlat(Body body)
       gluQuadricNormals( sphere, GLU_FLAT );//creates normals for all verticies
       gluQuadricTexture( sphere, GL_TRUE );
       glColor3fv(body.color);
-      gluSphere(sphere, body.radius, 50, 50);
+      gluSphere(sphere, body.radius, fidelity, fidelity);
     glPopMatrix();
 }
 

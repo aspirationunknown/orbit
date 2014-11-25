@@ -80,14 +80,21 @@ using namespace std;
 Keyboard controller;
 Point mouse_point;
 bool mouse_pressed = false;
-GLubyte* asteroid_image = NULL;
+
+//externs
+// global texture used for asteroids
+GLubyte* asteroid_image;
+
+// fidelity of wireframes
+int fidelity = 20;
+
 
 // screen state
 mode current_mode = FLAT;
-int ScreenWidth = 1280;
-int ScreenHeight = 512;
+int ScreenWidth = 720;
+int ScreenHeight = 720;
 int fps = 60;
-double speed = 1.0;
+double speed = .1;
 double camera_speed = 100.0;
 bool paused = true;
 
@@ -204,13 +211,26 @@ void step ( int value )
     if(controller.plus)
     {
         controller.plus = false;
-        speed += .1;
+        speed += .01;
     }
     else if (controller.minus)
     {
         controller.minus = false;
-        speed -= .1;
+        speed -= .01;
     }
+
+    // change fidelity
+    if(controller.greaterthan && fidelity < 50)
+    {
+        controller.greaterthan = false;
+        fidelity += 4;
+    }
+    if(controller.lessthan && fidelity > 2)
+    {
+        controller.lessthan = false;
+        fidelity -= 4;
+    }
+
     // apply camera changes  based on what keys are pressed
     if(controller.w)    camera.pan_up(camera_speed);
     if(controller.a)    camera.pan_left(camera_speed);
@@ -308,6 +328,17 @@ void reshape( int w, int h )
  ******************************************************************************/
 void keyboard_down( unsigned char key, int x, int y )
 {
+
+    // for precision movement
+    if (glutGetModifiers() == GLUT_ACTIVE_SHIFT)
+    {
+        camera_speed = 3;
+    }
+    else
+    {
+        camera_speed = 50;
+    }
+
     switch( key )
     {
         case 27:
@@ -342,12 +373,13 @@ void keyboard_down( unsigned char key, int x, int y )
             break;
         case 'p':
         case 'P':
+            speed = .005;
             controller.p = true;
             paused = false;
             break;
         case ' ':
             controller.space = true;
-            paused = true;
+            paused = !paused;
             break;
         case '=':
         case '+':
@@ -356,6 +388,14 @@ void keyboard_down( unsigned char key, int x, int y )
         case '-':
         case '_':
             controller.minus = true;
+            break;
+        case '.':
+        case '>':
+            controller.greaterthan = true;
+            break;
+        case ',':
+        case '<':
+            controller.lessthan = true;
             break;
         default:
             break;
@@ -407,7 +447,6 @@ void keyboard_up( unsigned char key, int x, int y )
             break;
         case ' ':
             controller.space = false;
-            paused = false;
             break;
         case '=':
         case '+':
@@ -485,11 +524,12 @@ void display_flat()
     for(int i = 0; i < num_bodies; i++)
     {   drawOrbit(bodies[i]);
         drawFlat(bodies[i]);
-
+        displayLabel(bodies[i]);
         for(int j = 0; j < bodies[i].num_moons; j++)
         {        
             drawOrbit(bodies[i].moons[j]);
             drawFlat(bodies[i].moons[j]);
+            displayLabel(bodies[i].moons[j]);
         }
     }
     for(int i = 0; i < num_belts; i++)
@@ -512,11 +552,12 @@ void display_smooth()
     for(int i = 0; i < num_bodies; i++)
     {   drawOrbit(bodies[i]);
         drawSmooth(bodies[i]);
-
+        displayLabel(bodies[i]);
         for(int j = 0; j < bodies[i].num_moons; j++)
         {        
             drawOrbit(bodies[i].moons[j]);
             drawSmooth(bodies[i].moons[j]);
+            displayLabel(bodies[i].moons[j]);
         }
     }
     for(int i = 0; i < num_belts; i++)
@@ -539,11 +580,12 @@ void display_wireframe()
     for(int i = 0; i < num_bodies; i++)
     {   drawOrbit(bodies[i]);
         drawWired(bodies[i]);
-
+        displayLabel(bodies[i]);
         for(int j = 0; j < bodies[i].num_moons; j++)
         {        
             drawOrbit(bodies[i].moons[j]);
             drawWired(bodies[i].moons[j]);
+            displayLabel(bodies[i].moons[j]);
         }
     }
     for(int i = 0; i < num_belts; i++)
@@ -566,11 +608,12 @@ void display_texture()
     for(int i = 0; i < num_bodies; i++)
     {   drawOrbit(bodies[i]);
         drawTextured(bodies[i]);
-
+        displayLabel(bodies[i]);
         for(int j = 0; j < bodies[i].num_moons; j++)
         {        
             drawOrbit(bodies[i].moons[j]);
             drawTextured(bodies[i].moons[j]);
+            displayLabel(bodies[i].moons[j]);
         }
     }
     for(int i = 0; i < num_belts; i++)
@@ -640,6 +683,11 @@ void add_belt(
     Belt newBelt;
     newBelt.count = count;
 
+    newBelt.color[0] = color[0];
+    newBelt.color[1] = color[1];
+    newBelt.color[2] = color[2];
+
+    newBelt.min_orbital_period = min_orbital_period;
     newBelt.max_orbital_period = max_orbital_period;
     newBelt.min_rotation_period = min_rotation_period;
     newBelt.max_rotation_period = max_rotation_period;
@@ -661,7 +709,7 @@ void add_belt(
  ******************************************************************************/
 void create_camera()
 {
-    speed = 1.0;
+    speed = .05;
     camera.position.x = 0;
     camera.position.y = 0;
     camera.position.z = 1000;
@@ -694,32 +742,32 @@ void create_solar_system()
     // load the static texture
     getTexture(asteroid_image, "ceres.bmp");
 
-    //add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp", "Sol" );
-    add_body(White, 0, 2439, 58, 88, 1416, "mercury.bmp", "Mercury" );
-    add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp", "Venus" );
+    add_body(Yellow, 255, 69600, 0, 1, 25, "sun.bmp", "Sol" );
+    add_body(White, 0, 2439, 108, 88, 1416, "mercury.bmp", "Mercury" );
+    add_body(Green, 0, 6052, 158, 225, 5832, "venus.bmp", "Venus" );
     
-    add_body(Blue, 0, 6378, 150, 365, 24, "earth.bmp", "Terra");
+    add_body(Blue, 0, 6378, 200, 365, 24, "earth.bmp", "Terra");
     bodies[num_bodies-1].moons = new Body[1];    
-    bodies[num_bodies-1].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp", "Luna");
+    bodies[num_bodies-1].add_moon(White, 0, 1738, 1.384, 27.3, 27.3 * 24, "moon.bmp", "Luna");
     
-    add_body(Red, 0, 3394, 228, 687, 24.6, "mars.bmp", "Mars");
+    add_body(Red, 0, 3394, 278, 687, 24.6, "mars.bmp", "Mars");
     
-    add_belt(50, White, 300, 700, 10, 10000, 600, 5000, 20, 500);  // asteroid belt
+    add_belt(100, White, 600, 4000, 10, 10000, 350, 600, 500, 1500);  // asteroid belt
 
-    add_body(Red, 0, 71398, 779, 4332, 9.8, "jupiter.bmp", "Jupiter");
+    add_body(Red, 0, 35398, 829, 4332, 9.8, "jupiter.bmp", "Jupiter");
     bodies[num_bodies-1].moons = new Body[4];
-    bodies[num_bodies-1].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp", "Io"); // Io
-    bodies[num_bodies-1].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp", "Callisto"); // Callisto
-    bodies[num_bodies-1].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp", "Europa"); // Europa
-    bodies[num_bodies-1].add_moon(Green, 0, 2634, 1.07, 7.154, 7.154 * 24, "ganymede.bmp", "Ganymede"); //Ganymede
+    bodies[num_bodies-1].add_moon(Red, 0 , 1821, 5.21, 1.7, 1.7 * 24, "io.bmp", "Io"); // Io
+    bodies[num_bodies-1].add_moon(White, 0, 2410, 12.79, 16.6, 16.6 * 24, "callisto.bmp", "Callisto"); // Callisto
+    bodies[num_bodies-1].add_moon(Blue, 0, 1560, 6.709, 3.55, 3.55 * 24, "europa.bmp", "Europa"); // Europa
+    bodies[num_bodies-1].add_moon(Green, 0, 2634, 8.7, 7.154, 7.154 * 24, "ganymede.bmp", "Ganymede"); //Ganymede
     
-    add_body(Yellow, 0, 60270, 1424, 10761, 10.2, "saturn.bmp", "Saturn");
+    add_body(Yellow, 0, 30270, 1174, 10761, 10.2, "saturn.bmp", "Saturn");
     bodies[num_bodies-1].add_rings(White, 67270, 140270, "saturnrings.bmp");
 
-    add_body(Cyan, 0, 25550, 2867, 30682, 15.5, "uranus.bmp", "Uranus");
-    add_body(Blue, 0, 24750, 4492, 60195, 15.8, "neptune.bmp", "Neptune");
+    add_body(Cyan, 0, 12550, 1717, 30682, 15.5, "uranus.bmp", "Uranus");
+    add_body(Blue, 0, 11750, 2642, 60195, 15.8, "neptune.bmp", "Neptune");
     
-    add_belt(200, White, 6000, 10000, 10, 10000, 5235, 7479, 20, 1000); // kuiper belt
+    add_belt(300, White, 6000, 10000, 10, 10000, 2735, 4079, 500, 3000); // kuiper belt
 
 /*
     radius distance year day

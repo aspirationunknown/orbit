@@ -6,10 +6,6 @@
 #include <GL/freeglut.h>
 #include <cmath>
 
-// global texture used for asteroids
-extern GLubyte* asteroid_image;
-
-
 // keyboard state
 
 struct Keyboard
@@ -29,6 +25,9 @@ struct Keyboard
     bool right = false;
     bool up = false;
     bool down = false;
+    bool shift = false;
+    bool lessthan = false;
+    bool greaterthan = false;
 };
 
 //keys
