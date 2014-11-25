@@ -88,7 +88,7 @@ int ScreenWidth = 1280;
 int ScreenHeight = 512;
 int fps = 60;
 double speed = 1.0;
-double camera_speed = 10.0;
+double camera_speed = 100.0;
 bool paused = true;
 
 // solar system
@@ -162,6 +162,7 @@ int main ( int argc, char *argv[] )
 void initOpenGL( void )
 {
     glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );     // 32-bit graphics and double buffering
+    glEnable(GL_LIGHTING);
 
     glutInitWindowSize( ScreenWidth, ScreenHeight );    // initial window size
     glutInitWindowPosition( 100, 50 );                  // initial window position
@@ -211,10 +212,12 @@ void step ( int value )
         speed -= .1;
     }
     // apply camera changes  based on what keys are pressed
-    if(controller.w)    camera.pan_forward(camera_speed);
+    if(controller.w)    camera.pan_up(camera_speed);
     if(controller.a)    camera.pan_left(camera_speed);
-    if(controller.s)    camera.pan_backward(camera_speed);
+    if(controller.s)    camera.pan_down(camera_speed);
     if(controller.d)    camera.pan_right(camera_speed);
+    if(controller.x)    camera.zoom_out(camera_speed);
+    if(controller.z)    camera.zoom_in(camera_speed);
     
     if(controller.r)
     {
@@ -309,6 +312,14 @@ void keyboard_down( unsigned char key, int x, int y )
     {
         case 27:
             exit ( 0 );
+		case 'Z':
+		case 'z':
+            controller.z = true;
+			break;
+		case 'x':
+		case 'X':
+            controller.x = true;
+			break;
 		case 'W':
 		case 'w':
             controller.w = true;
@@ -361,6 +372,14 @@ void keyboard_up( unsigned char key, int x, int y )
 {
     switch( key )
     {
+        case 'Z':
+		case 'z':
+            controller.z = false;
+			break;
+		case 'x':
+		case 'X':
+            controller.x = false;
+			break;
 		case 'W':
 		case 'w':
             controller.w = false;
@@ -466,6 +485,12 @@ void display_flat()
     for(int i = 0; i < num_bodies; i++)
     {   drawOrbit(bodies[i]);
         drawFlat(bodies[i]);
+
+        for(int j = 0; j < bodies[i].num_moons; j++)
+        {        
+            drawOrbit(bodies[i].moons[j]);
+            drawFlat(bodies[i].moons[j]);
+        }
     }
     for(int i = 0; i < num_belts; i++)
     {
@@ -484,7 +509,23 @@ void display_flat()
  ******************************************************************************/
 void display_smooth()
 {
-    
+    for(int i = 0; i < num_bodies; i++)
+    {   drawOrbit(bodies[i]);
+        drawSmooth(bodies[i]);
+
+        for(int j = 0; j < bodies[i].num_moons; j++)
+        {        
+            drawOrbit(bodies[i].moons[j]);
+            drawSmooth(bodies[i].moons[j]);
+        }
+    }
+    for(int i = 0; i < num_belts; i++)
+    {
+        for(int j = 0; j < belts[i].count; j++)
+        {
+            drawSmooth(belts[i].asteroids[j]);
+        }
+    }   
 }
 
  /***************************************************************************//**
@@ -495,7 +536,23 @@ void display_smooth()
  ******************************************************************************/
 void display_wireframe()
 {
-    
+    for(int i = 0; i < num_bodies; i++)
+    {   drawOrbit(bodies[i]);
+        drawWired(bodies[i]);
+
+        for(int j = 0; j < bodies[i].num_moons; j++)
+        {        
+            drawOrbit(bodies[i].moons[j]);
+            drawWired(bodies[i].moons[j]);
+        }
+    }
+    for(int i = 0; i < num_belts; i++)
+    {
+        for(int j = 0; j < belts[i].count; j++)
+        {
+            drawWired(belts[i].asteroids[j]);
+        }
+    }
 }
 
   /***************************************************************************//**
@@ -506,7 +563,23 @@ void display_wireframe()
  ******************************************************************************/
 void display_texture()
 {
-    
+    for(int i = 0; i < num_bodies; i++)
+    {   drawOrbit(bodies[i]);
+        drawTextured(bodies[i]);
+
+        for(int j = 0; j < bodies[i].num_moons; j++)
+        {        
+            drawOrbit(bodies[i].moons[j]);
+            drawTextured(bodies[i].moons[j]);
+        }
+    }
+    for(int i = 0; i < num_belts; i++)
+    {
+        for(int j = 0; j < belts[i].count; j++)
+        {
+            drawTextured(belts[i].asteroids[j]);
+        }
+    }
 }
 
   /***************************************************************************//**
@@ -596,8 +669,8 @@ void create_camera()
     camera.look_at.y = 0;
     camera.look_at.z = 0;
 
-    camera.left.dx = 0;
-    camera.left.dy = -1;
+    camera.left.dx = 1;
+    camera.left.dy = 0;
     camera.left.dz = 0;
 
     camera.up.dx = 0;
@@ -621,7 +694,7 @@ void create_solar_system()
     // load the static texture
     getTexture(asteroid_image, "ceres.bmp");
 
-    add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp", "Sol" );
+    //add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp", "Sol" );
     add_body(White, 0, 2439, 58, 88, 1416, "mercury.bmp", "Mercury" );
     add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp", "Venus" );
     

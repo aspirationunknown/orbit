@@ -84,13 +84,14 @@ void drawOrbit(Body body)
     //body.center is center of orbit
     //body.orbital_radius
     int i;
-
+    
+    displayLabel(body);
     glBegin(GL_LINES);
     glColor3fv(White);
     for(i = 0; i < 360; ++i)
     {
-        glVertex3f(body.orbital_radius * cos(i * M_PI / 180.0), body.orbital_radius * sin(i * M_PI / 180.0), 0.0);
-        glVertex3f(body.orbital_radius * cos((i + 1) * M_PI / 180.0), body.orbital_radius * sin((i + 1) * M_PI / 180.0), 0.0);
+        glVertex3f(body.center.x + body.orbital_radius * cos(i * M_PI / 180.0), body.center.y + body.orbital_radius * sin(i * M_PI / 180.0), 0.0);
+        glVertex3f(body.center.x + body.orbital_radius * cos((i + 1) * M_PI / 180.0), body.center.y + body.orbital_radius * sin((i + 1) * M_PI / 180.0), 0.0);
     } 
     glEnd();
 }

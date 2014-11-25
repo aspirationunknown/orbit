@@ -15,22 +15,22 @@ const float White[]	= { 1.0, 1.0, 1.0 };
 
 const double orbital_period_scale = 1.0/365;
 const double rotation_period_scale = 1.0/(365 * 24);
-const double orbital_radius_scale =  1.0;
-const double orbital_radius_offset = 20;
-const double radius_scale = 1.0/1000;
+const double orbital_radius_scale =  10;
+const double orbital_radius_offset = 0;
+const double radius_scale = 1.0/2000;
 
 struct Point
 {
-    int x;
-    int y;
-    int z;
+    int x = 0;
+    int y = 0;
+    int z = 0;
 };
 
 struct Vector
 {
-    double dx;
-    double dy;
-    double dz;
+    double dx = 0;
+    double dy = 0;
+    double dz = 0;
 
     void normalize();
 };
@@ -89,10 +89,14 @@ struct Camera
     void rotate_up(double r);
     void rotate_down(double r);
  
+    void pan_down(int d);
+    void pan_up(int d);
     void pan_forward(int d);
     void pan_backward(int d);
     void pan_left(int d);
     void pan_right(int d);
+    void zoom_in(int d);
+    void zoom_out(int d);
 };
 
 struct Belt

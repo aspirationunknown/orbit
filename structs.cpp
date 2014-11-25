@@ -129,6 +129,51 @@ void Camera::rotate_down(double r)
 }
 
 
+void Camera::pan_up(int d)
+{
+    std::cout << "\n-------------\nx:" << this->position.x;
+    std::cout << "\ny:" << this->position.y;
+    std::cout << "\nz:" << this->position.z;
+
+    this->position.x += this->up.dx * d;
+    this->position.y += this->up.dy * d;
+
+    this->look_at.x += this->up.dx * d;
+    this->look_at.y += this->up.dy * d;
+}
+
+void Camera::pan_down(int d)
+{
+    this->pan_up(-1 * d);
+}
+
+void Camera::zoom_in(int d)
+{
+    std::cout << "\n-------------\nx:" << this->position.x;
+    std::cout << "\ny:" << this->position.y;
+    std::cout << "\nz:" << this->position.z;
+
+    Vector forward;
+    forward.dx = look_at.x - position.x;
+    forward.dy = look_at.y - position.y;
+    forward.dz = look_at.z - position.z;
+
+    // only zoom in if the magnitude of look_at -> position is greater than d
+    if(sqrt((forward.dx)*(forward.dx) + (forward.dy)*(forward.dy) + (forward.dz)*(forward.dz)) <= d)
+        return;
+
+    forward.normalize();
+    
+    this->position.x += forward.dx * d;
+    this->position.y += forward.dy * d;
+    this->position.z += forward.dz * d;
+}
+
+void Camera::zoom_out(int d)
+{
+    this->zoom_in(-1 * d);
+}
+
 void Camera::pan_forward(int d)
 {
     std::cout << "\n-------------\nx:" << this->position.x;
@@ -145,14 +190,13 @@ void Camera::pan_forward(int d)
     this->position.x += forward.dx * d;
     this->position.y += forward.dy * d;
     this->position.z += forward.dz * d;
+    this->look_at.x += forward.dx * d;
+    this->look_at.y += forward.dy * d;
+    this->look_at.z += forward.dz * d;
 }
 
 void Camera::pan_backward(int d)
 {
-    std::cout << "\n-------------\nx:" << this->position.x;
-    std::cout << "\ny:" << this->position.y;
-    std::cout << "\nz:" << this->position.z;
-
     this->pan_forward(-1 * d);
 }
 void Camera::pan_left(int d)
@@ -169,10 +213,6 @@ void Camera::pan_left(int d)
 }
 void Camera::pan_right(int d)
 {
-    std::cout << "\n-------------\nx:" << this->position.x;
-    std::cout << "\ny:" << this->position.y;
-    std::cout << "\nz:" << this->position.z;
-
     this->pan_left(-1 * d);
 }
 void Vector::normalize()

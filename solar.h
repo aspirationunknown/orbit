@@ -13,6 +13,8 @@ extern GLubyte* asteroid_image;
 
 struct Keyboard
 {
+    bool z = false;
+    bool x = false;
 	bool w = false;
 	bool s = false;
 	bool a = false;
