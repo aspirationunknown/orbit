@@ -142,9 +142,9 @@ void Camera::pan_forward(int d)
 
     forward.normalize();
     
-    this->position.x += forward.dx;
-    this->position.y += forward.dy;
-    this->position.z += forward.dz;
+    this->position.x += forward.dx * d;
+    this->position.y += forward.dy * d;
+    this->position.z += forward.dz * d;
 }
 
 void Camera::pan_backward(int d)
@@ -178,7 +178,7 @@ void Camera::pan_right(int d)
 void Vector::normalize()
 {
     double magnitude = sqrt((this->dx)*(this->dx) + (this->dy)*(this->dy) + (this->dz)*(this->dz));
-    this->dx / magnitude;
-    this->dy / magnitude;
-    this->dz / magnitude;
+    this->dx /= magnitude;
+    this->dy /= magnitude;
+    this->dz /= magnitude;
 }
