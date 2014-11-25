@@ -1,3 +1,12 @@
+/******************************************************************************
+* Name: solarGraphics.cpp
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: This file has all of the functions for drawing objects (planets,
+*              moons, asteroids, and orbital paths.
+*
+******************************************************************************/
 #include "solar.h"
 
 //externs
@@ -8,8 +17,16 @@ extern GLubyte* asteroid_image;
 // fidelity of wireframes
 extern int fidelity;
 
-//drawWireSpheres
-//glutWireSphere(GLdouble radius, GLint slices, GLint stacks); slices = longitude, stacks = lattitude
+/******************************************************************************
+* Name: drawWired
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the wireframe planets, moons, and asteroids.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawWired(Body body)
 {
     glPushMatrix();
@@ -25,9 +42,16 @@ void drawWired(Body body)
     }
 }
 
-//drawSolidScene
-//draw the solar system using solid spheres
-
+/******************************************************************************
+* Name: drawSmooth
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the smooth shaded planets, moons, and asteroids.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawSmooth(Body body)
 {
     GLUquadricObj* sphere;
@@ -49,21 +73,31 @@ void drawSmooth(Body body)
 }
 
 
-//draw textured sphere
-//draw textured ring 
-//rings with be drawn as a cyllindar with a min and max radius but height of zero
-//body.image is texture map for body, body.ring.image for rings, check body.has_ring true if it has rings and false if it does not
+/******************************************************************************
+* Name: drawTextured
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the texture mapped planets, moons, and asteroids.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawTextured(Body body)
 {
     GLUquadricObj* sphere;
     if(body.is_asteroid == false)
     {
         glEnable(GL_TEXTURE_2D);
-        glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, body.image );
+        glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+        //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        //glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 512, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, body.image );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+
+        gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, 512, 256, GL_RGB, GL_UNSIGNED_BYTE, body.image );
 
         sphere = gluNewQuadric( );
         gluQuadricDrawStyle( sphere, GLU_FILL );//draws the sphere with filled in polygons
@@ -73,7 +107,7 @@ void drawTextured(Body body)
     else
     {
         glEnable(GL_TEXTURE_2D);
-        glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, asteroid_image );
+        glTexImage2D( GL_TEXTURE_2D, 0, 3, 512, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, asteroid_image );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
@@ -84,15 +118,24 @@ void drawTextured(Body body)
         gluQuadricNormals( sphere, GLU_SMOOTH );//creates normals for all verticies
         gluQuadricTexture( sphere, GL_TRUE );//creates texture coordinates
     }
-
+/*
     if(body.has_ring == true)
     {
         drawTexturedRing(body);
     }
+*/
 }
 
-//drawOrbit
-//draw a dotted circle using the body's orbital_radius
+/******************************************************************************
+* Name: drawOrbit
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the orbital paths of planets and moons.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawOrbit(Body body)
 {
     //body.center is center of orbit
@@ -108,7 +151,16 @@ void drawOrbit(Body body)
     glEnd();
 }
 
-//drawRing
+/******************************************************************************
+* Name: drawTexturedRing
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the texture mapped rings of planets.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawTexturedRing(Body body)
 {
     GLUquadricObj* ring;
@@ -127,15 +179,36 @@ void drawTexturedRing(Body body)
     
 }
 
+/******************************************************************************
+* Name: drawWiredRing
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the wireframe rings of planets.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawWiredRing(Body body)
 {
-    GLUquadricObj* ring;
-    ring = gluNewQuadric();
-    gluQuadricDrawStyle(ring, GLU_LINE);
-    //need to set center of ring to center of body
-    gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, 20, 20);
+    glPushMatrix();
+      glTranslatef(body.position.x, body.position.y, body.position.z);
+      glRotatef(360 * body.rotation / (2 * M_PI), 0 , 0, 1 );
+      glColor3fv(body.color);
+      glutWireCylinder(body.ring.max_radius, 0.0, fidelity, fidelity);
+    glPopMatrix();
 }
 
+/******************************************************************************
+* Name: drawSmoothRing
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the smooth shaded rings of planets.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawSmoothRing(Body body)
 {
     GLUquadricObj* ring;
@@ -145,6 +218,16 @@ void drawSmoothRing(Body body)
     gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, 20, 20);
 }
 
+/******************************************************************************
+* Name: drawFlatRing
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the flat shaded rings of planets.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawFlatRing(Body body)
 {
     GLUquadricObj* ring;
@@ -154,6 +237,16 @@ void drawFlatRing(Body body)
     gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, 20, 20);
 }
 
+/******************************************************************************
+* Name: drawFlat
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the flat shaded planets, moons, and asteroids.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void drawFlat(Body body)
 {
     GLUquadricObj* sphere;
@@ -169,11 +262,31 @@ void drawFlat(Body body)
     glPopMatrix();
 }
 
+/******************************************************************************
+* Name: cameraFunction
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Sets the look at position of the camera
+*
+* Param[in] camera - a Camera object.
+*
+******************************************************************************/
 void cameraFunction(Camera camera)
 {
     gluLookAt(camera.position.x, camera.position.y, camera.position.z, camera.look_at.x, camera.look_at.y, camera.look_at.z, camera.up.dx, camera.up.dy, camera.up.dz);
 }
 
+/******************************************************************************
+* Name: displayLabel
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Draws the names of the different planets, moons, and the sun.
+*
+* Param[in] body - a Body object that is either a planet, moon, or an asteroid
+*
+******************************************************************************/
 void displayLabel(Body body)
 {
     drawBitmapString(body.name.c_str(), body.position.x, body.position.y, -body.radius - 5.0, White);
