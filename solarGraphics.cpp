@@ -5,7 +5,7 @@
 void drawWired(Body body)
 {
     glPushMatrix();
-      glTranslatef(body.center.x, body.center.y, body.center.z);
+      glTranslatef(body.position.x, body.position.y, body.position.z);
       glColor3fv(body.color);
       glutWireSphere(body.radius, 50, 50);
     glPopMatrix();
@@ -21,11 +21,16 @@ void drawWired(Body body)
 
 void drawSmooth(Body body)
 {
+    GLUquadricObj* sphere;
+
     glPushMatrix();
-      glShadeModel(GL_SMOOTH);
-      glTranslatef(body.center.x, body.center.y, body.center.z);
+      glTranslatef(body.position.x, body.position.y, body.position.z);
+      sphere = gluNewQuadric( );
+      gluQuadricDrawStyle( sphere, GLU_FILL );//draws the sphere with filled in polygons
+      gluQuadricNormals( sphere, GLU_SMOOTH );//creates normals for all verticies
+      gluQuadricTexture( sphere, GL_TRUE );
       glColor3fv(body.color);
-      glutSolidSphere(body.radius, 50, 50);
+      gluSphere(sphere, body.radius, 50, 50);
     glPopMatrix();
 
     if(body.has_ring == true)
@@ -143,11 +148,16 @@ void drawFlatRing(Body body)
 
 void drawFlat(Body body)
 {
+    GLUquadricObj* sphere;
+    
     glPushMatrix();
-      glShadeModel(GL_FLAT);
-      glTranslatef(body.center.x, body.center.y, body.center.z);
+      glTranslatef(body.position.x, body.position.y, body.position.z);
+      sphere = gluNewQuadric( );
+      gluQuadricDrawStyle( sphere, GLU_FILL );//draws the sphere with filled in polygons
+      gluQuadricNormals( sphere, GLU_FLAT );//creates normals for all verticies
+      gluQuadricTexture( sphere, GL_TRUE );
       glColor3fv(body.color);
-      glutSolidSphere(body.radius, 50, 50);
+      gluSphere(sphere, body.radius, 50, 50);
     glPopMatrix();
 }
 

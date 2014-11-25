@@ -9,6 +9,7 @@
 // global texture used for asteroids
 extern GLubyte* asteroid_image;
 
+
 // keyboard state
 
 struct Keyboard
