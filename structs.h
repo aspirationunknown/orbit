@@ -1,4 +1,5 @@
 #include <GL/freeglut.h>
+#include <string>
 
 // colors {R, G, B}
 const float Black[]	= { 0.0, 0.0, 0.0 };
@@ -52,6 +53,7 @@ struct Body
     Body *moons;
 
     GLubyte* image;
+    std::string name;
 
     bool is_asteroid = false;
 
@@ -70,7 +72,7 @@ struct Body
     double rotation = 0;
 
     void step(double speed);
-    void add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file);
+    void add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file, const char* name);
     void add_rings(const float color[3], double minradius, double maxradius, const char* texture_file);
 };
 

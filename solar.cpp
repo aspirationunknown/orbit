@@ -22,17 +22,17 @@
 
             Controls:
 
-                - W: Rotate forward
-                - S: Rotate backward
-                - A: Rotate System Left
-                - D: Rotate System Right
+                - W: Pan forward
+                - S: Pan backward
+                - A: Pan left
+                - D: Pan Right
 
-                - Left: Pan Left
-                - Right: Pan Right
-                - Up: Pan Up
-                - Down: Pan Down
+                - Left: Rotate Left
+                - Right: Rotate Right
+                - Up: Rotate Up
+                - Down: Rotate Down
 
-                - R: Reset
+                - R: Reset the camera position and the speed
                 - Space: Pause / Play
                 - P: Pause and move forward while p is pressed
 
@@ -83,7 +83,7 @@ bool mouse_pressed = false;
 GLubyte* asteroid_image = NULL;
 
 // screen state
-mode current_mode = TEXTURE;
+mode current_mode = FLAT;
 int ScreenWidth = 1280;
 int ScreenHeight = 512;
 int fps = 60;
@@ -98,6 +98,11 @@ Belt belts[10];
 int num_bodies = 0;
 int num_belts = 0;
 
+// for help
+const char* open_readme_command = "xdg-open README";
+const char* open_readme_command_win = "notepad.exe README";
+const char* open_readme_command_gedit = "gedit README";
+
 // function prototypes
 void initOpenGL();
 void step( int value);
@@ -107,12 +112,13 @@ void keyboard_down( unsigned char key, int x, int y);
 void keyboard_up( unsigned char key, int x, int y);
 void special_up( int key, int x, int y );
 void special_down( int key, int x, int y );
-void mouse_action(int button, int state, int x, int y);
-void right_up(int x, int y);
-void left_up(int x, int y);
+
+// menus
+void MainMenuHandler(int item);
+void CreateMenus();
 
 void add_body(const float color[3], double emissivity, double radius, double orbital_period, 
-    double rotation_period, double orbital_radius, const char* texture_file);
+    double rotation_period, double orbital_radius, const char* texture_file, const char* name);
 void add_belt(int count, const float color[3], double min_orbital_period, double max_orbital_period,
     double min_rotation_period, double max_rotation_period, double min_orbital_radius,
     double max_orbital_radius,double min_radius, double max_radius);
@@ -167,12 +173,11 @@ void initOpenGL( void )
     glutSpecialUpFunc( special_up );
     glutSpecialFunc( special_down );
 
-    glutMouseFunc(mouse_action);
-
     glClearColor( 0.0, 0.0, 0.0, 1.0 );                 // use black for glClear command
     glutDisplayFunc( display );
     glutReshapeFunc( reshape );
     glutTimerFunc( 1000/fps, step, 0 );
+    CreateMenus();
 }
 
 
@@ -219,6 +224,7 @@ void step ( int value )
 	// loop through every body, calling that body's step function
     if (!paused)
     {
+        std::cout << "\nMOVING SHIT\n";
         for(int i = 0; i < num_bodies; i++)
             bodies[i].step(speed);
 	    for(int i = 0; i < num_belts; i++)
@@ -293,7 +299,6 @@ void reshape( int w, int h )
  ******************************************************************************/
 void keyboard_down( unsigned char key, int x, int y )
 {
-    std::cout << endl << key << " pressed" << std::endl;
     switch( key )
     {
         case 27:
@@ -348,8 +353,6 @@ void keyboard_down( unsigned char key, int x, int y )
  ******************************************************************************/
 void keyboard_up( unsigned char key, int x, int y )
 {
-
-    std::cout << endl << key << " released" << std::endl;
     switch( key )
     {
 		case 'W':
@@ -446,60 +449,6 @@ void special_up( int key, int x, int y )
     }
 }
 
-
-
- /***************************************************************************//**
- * mouse_action
- * Authors - Derek Stotz, Charles Parsons
- *
- * handles mouse press and release events
- ******************************************************************************/
-void mouse_action(int button, int state, int x, int y)
-{
-    mouse_point.x = x * 2 - ScreenWidth;
-    mouse_point.y = - y * 2 + ScreenHeight;
-
-    if(button == GLUT_LEFT_BUTTON)
-    {
-        if(state == GLUT_UP)
-            left_up(x, y);
-        else
-            mouse_pressed = true;
-    }
-    else
-    {
-        if(state == GLUT_UP)
-            right_up(x, y);
-    }
-}
-
- /***************************************************************************//**
- * left_up
- * Authors - Derek Stotz, Charles Parsons
- *
- * handles left mouse button click actions
- ******************************************************************************/
-void left_up(int x, int y)
-{
-    mouse_pressed = false;
-}
-
-
- /***************************************************************************//**
- * right_up
- * Authors - Derek Stotz, Charles Parsons
- *
- * handles right mouse button click actions
- ******************************************************************************/
-void right_up(int x, int y)
-{
-    switch( current_mode )
-    {
-        default:
-            break;
-    }
-}
-
  /***************************************************************************//**
  * Display Flat
  * Authors - Derek Stotz, Charles Parsons
@@ -567,9 +516,11 @@ void add_body(
     double orbital_radius,  // in millions of km
     double orbital_period,  // in days
     double rotation_period,  // in hours
-    const char* texture_file)
+    const char* texture_file,
+    const char* name)
 {
     Body newBody;
+    newBody.name = std::string(name);
 
     newBody.color[0] = color[0];
     newBody.color[1] = color[1];
@@ -627,10 +578,11 @@ void add_belt(
  * Create Solar System
  * Authors - Derek Stotz, Charles Parsons
  *
- * Creates the initial camera state
+ * Creates the initial camera and speed states
  ******************************************************************************/
 void create_camera()
 {
+    speed = 1.0;
     camera.position.x = 100;
     camera.position.y = 0;
     camera.position.z = 50;
@@ -663,32 +615,32 @@ void create_solar_system()
     // load the static texture
     getTexture(asteroid_image, "ceres.bmp");
 
-    add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp" );
-    add_body(White, 0, 2439, 58, 88, 1416, "mercury.bmp" );
-    add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp" );
+    add_body(Yellow, 255, 696000/10, 0, 0, 25, "sun.bmp", "Sol" );
+    add_body(White, 0, 2439, 58, 88, 1416, "mercury.bmp", "Mercury" );
+    add_body(Green, 0, 6052, 108, 225, 5832, "venus.bmp", "Venus" );
     
-    add_body(Blue, 0, 6378, 150, 365, 24, "earth.bmp");
+    add_body(Blue, 0, 6378, 150, 365, 24, "earth.bmp", "Terra");
     bodies[num_bodies-1].moons = new Body[1];    
-    bodies[num_bodies-1].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp");
+    bodies[num_bodies-1].add_moon(White, 0, 1738, .384, 27.3, 27.3 * 24, "moon.bmp", "Luna");
     
-    add_body(Red, 0, 3394, 228, 687, 24.6, "mars.bmp");
+    add_body(Red, 0, 3394, 228, 687, 24.6, "mars.bmp", "Mars");
     
-    add_belt(100, White, 300, 700, 10, 10000, 600, 5000, 20, 500);  // asteroid belt
+    add_belt(50, White, 300, 700, 10, 10000, 600, 5000, 20, 500);  // asteroid belt
 
-    add_body(Red, 0, 71398, 779, 4332, 9.8, "jupiter.bmp");
+    add_body(Red, 0, 71398, 779, 4332, 9.8, "jupiter.bmp", "Jupiter");
     bodies[num_bodies-1].moons = new Body[4];
-    bodies[num_bodies-1].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp"); // Io
-    bodies[num_bodies-1].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp"); // Callisto
-    bodies[num_bodies-1].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp"); // Europa
-    bodies[num_bodies-1].add_moon(Green, 0, 2634, 1.07, 7.154, 7.154 * 24, "ganymede.bmp"); //Ganymede
+    bodies[num_bodies-1].add_moon(Red, 0 , 1821, .421, 1.7, 1.7 * 24, "io.bmp", "Io"); // Io
+    bodies[num_bodies-1].add_moon(White, 0, 2410, 1.879, 16.6, 16.6 * 24, "callisto.bmp", "Callisto"); // Callisto
+    bodies[num_bodies-1].add_moon(Blue, 0, 1560, .6709, 3.55, 3.55 * 24, "europa.bmp", "Europa"); // Europa
+    bodies[num_bodies-1].add_moon(Green, 0, 2634, 1.07, 7.154, 7.154 * 24, "ganymede.bmp", "Ganymede"); //Ganymede
     
-    add_body(Yellow, 0, 60270, 1424, 10761, 10.2, "saturn.bmp");
+    add_body(Yellow, 0, 60270, 1424, 10761, 10.2, "saturn.bmp", "Saturn");
     bodies[num_bodies-1].add_rings(White, 67270, 140270, "saturnrings.bmp");
 
-    add_body(Cyan, 0, 25550, 2867, 30682, 15.5, "uranus.bmp");
-    add_body(Blue, 0, 24750, 4492, 60195, 15.8, "neptune.bmp");
+    add_body(Cyan, 0, 25550, 2867, 30682, 15.5, "uranus.bmp", "Uranus");
+    add_body(Blue, 0, 24750, 4492, 60195, 15.8, "neptune.bmp", "Neptune");
     
-    add_belt(500, White, 6000, 10000, 10, 10000, 5235, 7479, 20, 1000); // kuiper belt
+    add_belt(200, White, 6000, 10000, 10, 10000, 5235, 7479, 20, 1000); // kuiper belt
 
 /*
     radius distance year day
@@ -704,4 +656,68 @@ Neptune 24750 4492 60195 15.8
 Moon 1738 0.384 27.3 27.3
 */
 
+}
+
+/*********************************************************
+|               Menu Code                                |
+*********************************************************/
+
+
+  /***************************************************************************//**
+ * Create Solar System
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Adds items to the right-click dropdown menu
+ ******************************************************************************/
+void CreateMenus()
+{
+    // create main menu
+    int value = 1;
+    int mainmenu = glutCreateMenu( MainMenuHandler );
+
+    glutAddMenuEntry( "Flat Shading", value++ );
+    glutAddMenuEntry( "Smooth Shading", value++ );
+    glutAddMenuEntry( "Wireframe", value++ );
+    glutAddMenuEntry( "Textured", value++ );
+    glutAddMenuEntry( "Help", value++ );
+    glutAddMenuEntry( "Exit", value++ );
+
+    // right button click activates menu
+    glutAttachMenu( GLUT_RIGHT_BUTTON );
+}
+
+  /***************************************************************************//**
+ * Create Solar System
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Handles menu selection
+ ******************************************************************************/
+void MainMenuHandler( int item )
+{
+    switch ( item )
+    {
+        case 1:
+            current_mode = FLAT;
+            break;
+        case 2:
+            current_mode = SMOOTH;
+            break;
+        case 3:
+            current_mode = WIREFRAME;
+            break;
+        case 4:
+            current_mode = TEXTURE;
+            break;
+        case 5:
+            if(system(open_readme_command_gedit) != 0)
+                if( system(open_readme_command) != 0)
+                    system(open_readme_command_win );  // well, if the default linux editor fails to launch, we're probably in windows.
+            break;
+        case 6:
+            exit( 0 );
+            break;
+        default:    // should not occur
+            cout << "invalid main menu item " << item << endl;
+            break;
+    }
 }

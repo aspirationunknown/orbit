@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <cmath>
-#include <string>
 #include <iostream>
 
 int getRand(int min, int max)
@@ -24,9 +23,11 @@ void getTexture(GLubyte* image, const char* filename)
     LoadBmpFile( ("./resources/" + name).c_str(), num_rows, num_cols, image );
 }
 
-void Body::add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file)
+void Body::add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file, const char* name)
 {
     Body newBody;
+    newBody.name = std::string(name);
+
     newBody.center.x = this->position.x;
     newBody.center.y = this->position.y;
     newBody.center.z = this->position.z;
