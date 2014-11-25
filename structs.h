@@ -1,3 +1,13 @@
+/******************************************************************************
+* Name: structs.h
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: This file has all of the structs we used for the solar system
+*              program as well as color global constants and orbital scaling
+*              global constants.
+*
+******************************************************************************/
 #include <GL/freeglut.h>
 #include <string>
 
@@ -12,13 +22,20 @@ const float Yellow[]	= { 1.0, 1.0, 0.0 };
 const float White[]	= { 1.0, 1.0, 1.0 };
 
 // scalings
-
 const double orbital_period_scale = 1.0/365;
 const double rotation_period_scale = 1.0/(365 * 24);
 const double orbital_radius_scale =  1.0;
 const double orbital_radius_offset = 0;
 const double radius_scale = 1.0/1000.0;
 
+/******************************************************************************
+* Name: Point
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: represents a 3D point.
+*
+******************************************************************************/
 struct Point
 {
     int x = 0;
@@ -26,6 +43,14 @@ struct Point
     int z = 0;
 };
 
+/******************************************************************************
+* Name: Vector
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: represents a 3D vector.
+*
+******************************************************************************/
 struct Vector
 {
     double dx = 0;
@@ -35,6 +60,14 @@ struct Vector
     void normalize();
 };
 
+/******************************************************************************
+* Name: Ring
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: represents a planetary ring
+*
+******************************************************************************/
 struct Ring
 {
     float color[3];
@@ -44,6 +77,14 @@ struct Ring
     double max_radius;
 };
 
+/******************************************************************************
+* Name: Body
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: represents a planet, moon, asteroid, or the sun.
+*
+******************************************************************************/
 struct Body
 {
     Point center;
@@ -76,6 +117,14 @@ struct Body
     void add_rings(const float color[3], double minradius, double maxradius, const char* texture_file);
 };
 
+/******************************************************************************
+* Name: Camera
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: represents the camera position.
+*
+******************************************************************************/
 struct Camera
 {
     Point look_at;
@@ -99,6 +148,14 @@ struct Camera
     void zoom_out(int d);
 };
 
+/******************************************************************************
+* Name: Belt
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: represents an asteroid belt.
+*
+******************************************************************************/
 struct Belt
 {
     int count;
@@ -120,7 +177,23 @@ struct Belt
     void create_asteroids();
 };
 
+/******************************************************************************
+* Name: getTexture
+*
+* Authors: Derek Stotz and Charles Parsons
+*
+* Description: Gets the texture map from a file and stores it in the Body
+*              struct.
+*
+******************************************************************************/
 void getTexture(GLubyte* image, const char* filename);
 
-// function by Dr. Weiss
+/******************************************************************************
+* Name: LoadBmpFile
+*
+* Authors: Dr. Weiss
+*
+* Description: Reads in a bitmap file and stores it in an array.
+*
+******************************************************************************/
 bool LoadBmpFile( const char* filename, int &NumRows, int &NumCols, GLubyte* &ImagePtr );
