@@ -50,3 +50,4 @@ void drawTextured(Body body);
 void drawTexturedRing(Body body);
 void drawWired(Body body);
 void drawWiredRing(Body body);
+void initLightModel();

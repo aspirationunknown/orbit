@@ -4,25 +4,54 @@
 #include <cmath>
 #include <iostream>
 
+
+  /***************************************************************************//**
+ * GetRand
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Returns a random number from min to max
+ ******************************************************************************/
 int getRand(int min, int max)
 {
     return min + rand() % (max - min);
 }
 
+
+  /***************************************************************************//**
+ * GetRandRadians
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Returns a random angle in radians, for the asteroid generation
+ ******************************************************************************/
 double getRandRadians()
 {
     return (((double)rand()) / RAND_MAX) * 2 * M_PI;
 }
 
+
+  /***************************************************************************//**
+ * Get Texture
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Loads a bmp file given by a filename string and stores it into a given byte array.
+ ******************************************************************************/
 void getTexture(GLubyte* image, const char* filename)
 {
     std::string name(filename);
     int num_rows = 256;
     int num_cols = 512;
-    // currently not working
-    LoadBmpFile( ("./resources/" + name).c_str(), num_rows, num_cols, image );
+    if (!LoadBmpFile( ("./resources/" + name).c_str(), num_rows, num_cols, image ))
+        std::cout << "Failed to load" << "./resources/" + name << std::endl;
 }
 
+
+  /***************************************************************************//**
+ * Add Moon
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Creates and adds a single body to the moon list.  Similar to the Add Body function
+    found in solar.cpp
+ ******************************************************************************/
 void Body::add_moon(const float color[3], double emissivity, double radius, double orbital_radius, double orbital_period, double rotation_period, const char* texture_file, const char* name)
 {
     Body newBody;
@@ -46,6 +75,14 @@ void Body::add_moon(const float color[3], double emissivity, double radius, doub
     this->num_moons++;
 }
 
+
+  /***************************************************************************//**
+ * Step
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Moves a body a distance defined by a given speed, updating the current position
+    in orbit and doing so for all of its moons as well.
+ ******************************************************************************/
 void Body::step( double speed )
 {
     // since the framerate is 60 fps
@@ -68,6 +105,13 @@ void Body::step( double speed )
     }    
 }
 
+
+  /***************************************************************************//**
+ * Step
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Steps a given amount for every asteroid in the belt
+ ******************************************************************************/
 void Belt::step( double speed )
 {
     for (int i = 0 ; i < this->count; i++)
@@ -76,6 +120,13 @@ void Belt::step( double speed )
     }
 }
 
+
+  /***************************************************************************//**
+ * Add Rings
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Adds a ring to a body with given color information and a shape defined by a min and max radius.
+ ******************************************************************************/
 void Body::add_rings(const float color[3], double minradius, double maxradius, const char* texture_file)
 {
     this->ring.min_radius = minradius;
@@ -88,6 +139,13 @@ void Body::add_rings(const float color[3], double minradius, double maxradius, c
     getTexture(this->ring.image, texture_file);
 }
 
+
+  /***************************************************************************//**
+ * Create Asteroids
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Creates randomly generated asteroids and adds them to the asteroid belt
+ ******************************************************************************/
 void Belt::create_asteroids()
 {
     srand (time(NULL));
@@ -115,30 +173,40 @@ void Belt::create_asteroids()
     }
 }
 
-void Camera::rotate_left(double r)
+  /***************************************************************************//**
+ * Rotate Up
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Raises the view angle by a distance d
+ ******************************************************************************/
+void Camera::rotate_up(double d)
 {
-    
-}
-void Camera::rotate_right(double r)
-{
-
-}
-void Camera::rotate_up(double r)
-{
-
-}
-void Camera::rotate_down(double r)
-{
-
+    this->rotate_down(-1 * d);
 }
 
+  /***************************************************************************//**
+ * Rotate Down
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Lowers the view angle by a distance d
+ ******************************************************************************/
+void Camera::rotate_down(double d)
+{
+    if(this->position.z > d)
+    {
+        this->position.z -= d;
+        this->position.y += d;
+    }
+}
 
+  /***************************************************************************//**
+ * Pan Up
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Pans the camera up by distance d
+ ******************************************************************************/
 void Camera::pan_up(int d)
 {
-    std::cout << "\n-------------\nx:" << this->position.x;
-    std::cout << "\ny:" << this->position.y;
-    std::cout << "\nz:" << this->position.z;
-
     this->position.x += this->up.dx * d;
     this->position.y += this->up.dy * d;
 
@@ -146,24 +214,32 @@ void Camera::pan_up(int d)
     this->look_at.y += this->up.dy * d;
 }
 
+  /***************************************************************************//**
+ * Pan Down
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Pans the camera down by distance d
+ ******************************************************************************/
 void Camera::pan_down(int d)
 {
     this->pan_up(-1 * d);
 }
 
+  /***************************************************************************//**
+ * Zoom In
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Moves the camera towards the look_at point by a distance d
+ ******************************************************************************/
 void Camera::zoom_in(int d)
 {
-    std::cout << "\n-------------\nx:" << this->position.x;
-    std::cout << "\ny:" << this->position.y;
-    std::cout << "\nz:" << this->position.z;
-
     Vector forward;
     forward.dx = look_at.x - position.x;
     forward.dy = look_at.y - position.y;
     forward.dz = look_at.z - position.z;
 
     // only zoom in if the magnitude of look_at -> position is greater than d
-    if(sqrt((forward.dx)*(forward.dx) + (forward.dy)*(forward.dy) + (forward.dz)*(forward.dz)) <= d)
+    if(sqrt((forward.dx)*(forward.dx) + (forward.dy)*(forward.dy) + (forward.dz)*(forward.dz)) <= d || (forward.dz+1) >= this->position.z)
         return;
 
     forward.normalize();
@@ -173,52 +249,49 @@ void Camera::zoom_in(int d)
     this->position.z += forward.dz * d;
 }
 
+  /***************************************************************************//**
+ * Zoom Out
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Zooms the camera away from the look_at point by distance d
+ ******************************************************************************/
 void Camera::zoom_out(int d)
 {
     this->zoom_in(-1 * d);
 }
 
-void Camera::pan_forward(int d)
-{
-    std::cout << "\n-------------\nx:" << this->position.x;
-    std::cout << "\ny:" << this->position.y;
-    std::cout << "\nz:" << this->position.z;
-    
-    Vector forward;
-    forward.dx = look_at.x - position.x;
-    forward.dy = look_at.y - position.y;
-    forward.dz = look_at.z - position.z;
-
-    forward.normalize();
-    
-    this->position.x += forward.dx * d;
-    this->position.y += forward.dy * d;
-    this->position.z += forward.dz * d;
-    this->look_at.x += forward.dx * d;
-    this->look_at.y += forward.dy * d;
-    this->look_at.z += forward.dz * d;
-}
-
-void Camera::pan_backward(int d)
-{
-    this->pan_forward(-1 * d);
-}
+  /***************************************************************************//**
+ * Pan Left
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Pans the camera left by a distance d
+ ******************************************************************************/
 void Camera::pan_left(int d)
 {
-    std::cout << "\n-------------\nx:" << this->position.x;
-    std::cout << "\ny:" << this->position.y;
-    std::cout << "\nz:" << this->position.z;
-
     this->position.x += this->left.dx * d;
     this->position.y += this->left.dy * d;
 
     this->look_at.x += this->left.dx * d;
     this->look_at.y += this->left.dy * d;
 }
+
+  /***************************************************************************//**
+ * Pan Right
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Pans the camera to the right by a distance d
+ ******************************************************************************/
 void Camera::pan_right(int d)
 {
     this->pan_left(-1 * d);
 }
+
+  /***************************************************************************//**
+ * Normalize
+ * Authors - Derek Stotz, Charles Parsons
+ *
+ * Normalizes a vector
+ ******************************************************************************/
 void Vector::normalize()
 {
     double magnitude = sqrt((this->dx)*(this->dx) + (this->dy)*(this->dy) + (this->dz)*(this->dz));

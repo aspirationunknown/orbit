@@ -18,7 +18,8 @@
             To Compile: make
             To Run: ./solar
 
-            This application is a simplified model solar system
+            This application is a simplified model solar system.  It is not entierly accurate to scale, for usability reasons,
+            but it gives a decent overview.
 
             Controls:
 
@@ -27,25 +28,32 @@
                 - A: Pan left
                 - D: Pan Right
 
-                - Left: Rotate Left
-                - Right: Rotate Right
-                - Up: Rotate Up
-                - Down: Rotate Down
+                - Shift: Slow down camera movement
+
+                - Z: Zoom in
+                - X: Zoom out
+
+                - >: increase polygon fidelity
+                - <: reduce polygon fidelity
+
+                - Up: Lower the angle of view
+                - Down: Raise the angle of view
 
                 - R: Reset the camera position and the speed
                 - Space: Pause / Play
-                - P: Pause and move forward while p is pressed
+                - P: Pause and move forward slowly while p is pressed
 
-                - +: speed up the simulation by 10%
-                - -: slow down the simulation by 10%
+                - +: speed up the simulation
+                - -: slow down the simulation
 
             Press Esc to end the program.
                 
                         
  * Details -  
             The structure of solar is somewhat modular.  The main file, solar.cpp, holds all
-            global variables, callback functions and opengl functionality.  The
-            state of the application is determined by a mode enum.  There are four modes:
+            global variables and callback functions, other than the fidelity of the polygons and
+            the shared asteroid texture. The state of the application is determined by a mode enum.
+            There are four modes:
 
                 - SMOOTH: Draw the planets in the solar system with the smooth shading model.
                 - FLAT: Draw the planets in the solar system with the flat shading model.
@@ -53,21 +61,26 @@
                 - TEXTURE: Draw the planets in the solar system with mapped textures.
             
             Switch statements in the display and step functions determine which screen is drawn.
-            I/O, such as rotating the camera and navigating the environment, is handled in switch
-            statements and applied in the update steps.  A camera object stores current camera
-            inform.
+            Keyboard I/O is handled in statements and applied in the update steps, and the keyboard state is stored
+            in a struct which can be found in solar.h.  A camera object stores current camera
+            information and has some functionality which allows the camera to navigate the environment.
+
+            Standard openGL dropdown menus are used for mode selection, and the menu callback function can be found
+            in solar.cpp.
 
             All graphical functions, from drawing planets to mapping textures and displaying text, are found in
-            solarGraphics.cpp.  It makes use of const colors and object classes found in structs.h.    solar.h links
+            solarGraphics.cpp.  It makes use of const colors and object classes found in structs.h. solar.h links
             together solarGraphics.h and solar.cpp so both files may make use of the structs found in structs.h and their
             functionaliy found in structs.cpp.
 
-            structs.h holds the Camera and Body classes.  The camera class is a singleton, and is mostly there for code
-            reuse and cleanliness.  The body class is reused for every body in the solar system, and includes options for
-            nested orbitals, lighting properties and rings.
+            structs.h holds the Camera, Belt, Point, Vector, and Body structs.  The camera class is a singleton, and is mostly 
+            there for code reuse and cleanliness.  The body class is reused for every body in the solar system, and includes options for
+            nested orbitals, emissivity and rings.
  *
  * Issues and Bugs - 
-            No bugs to speak of.
+
+        
+            
  *
  ******************************************************************************/
 #include "solar.h"
@@ -96,7 +109,7 @@ int ScreenHeight = 720;
 int fps = 60;
 double speed = .1;
 double camera_speed = 100.0;
-bool paused = true;
+bool paused = false;
 
 // solar system
 Camera camera;
@@ -187,9 +200,11 @@ void initOpenGL( void )
     glutDisplayFunc( display );
     glutReshapeFunc( reshape );
     glutTimerFunc( 1000/fps, step, 0 );
-    
+
     glMatrixMode( GL_PROJECTION );      // use an orthographic projection
     glLoadIdentity();
+
+    initLightModel();
 
     //glClearColor(1.0, 1.0, 1.0, 1.0);
 }
@@ -211,12 +226,14 @@ void step ( int value )
     if(controller.plus)
     {
         controller.plus = false;
-        speed += .01;
+        if(speed < 1)        
+            speed += .01;
     }
     else if (controller.minus)
     {
         controller.minus = false;
-        speed -= .01;
+        if(speed > 0)
+            speed -= .01;
     }
 
     // change fidelity
@@ -247,8 +264,6 @@ void step ( int value )
     
     if(controller.up)   camera.rotate_up(camera_speed / 10);
     if(controller.down) camera.rotate_down(camera_speed / 10);
-    if(controller.left) camera.rotate_left(camera_speed / 10);
-    if(controller.right)camera.rotate_right(camera_speed / 10);
 
 	// loop through every body, calling that body's step function
     if (!paused)
@@ -472,16 +487,16 @@ void special_down( int key, int x, int y )
     switch( key )
     {
         case GLUT_KEY_UP:
-            // pan up
+            controller.up = true;
             break;
         case GLUT_KEY_DOWN:
-            // pan down
+            controller.down = true;
             break;
         case GLUT_KEY_LEFT:
-            // pan left
+            controller.left = true;
             break;
         case GLUT_KEY_RIGHT:
-            // pan right
+            controller.right = true;
         default:
             break;
     }
@@ -498,16 +513,16 @@ void special_up( int key, int x, int y )
     switch( key )
     {
         case GLUT_KEY_UP:
-            // stop panning up
+            controller.up =false;
             break;
         case GLUT_KEY_DOWN:
-            // stop panning down
+            controller.down = false;
             break;
         case GLUT_KEY_LEFT:
-            // stop panning left
+            controller.left = false;
             break;
         case GLUT_KEY_RIGHT:
-            // stop panning right
+            controller.right = false;
         default:
             break;
     }
@@ -620,7 +635,7 @@ void display_texture()
     {
         for(int j = 0; j < belts[i].count; j++)
         {
-            drawTextured(belts[i].asteroids[j]);
+            //drawTextured(belts[i].asteroids[j]);
         }
     }
 }
@@ -629,7 +644,7 @@ void display_texture()
  * Add Body
  * Authors - Derek Stotz, Charles Parsons
  *
- * Creates and adds a single body to the body list.  Scaling constants are found here.
+ * Creates and adds a single body to the body list.  Scaling constants are found in strucs.h
  ******************************************************************************/
 void add_body(
     const float color[3],
@@ -658,7 +673,6 @@ void add_body(
 
     bodies[num_bodies] = newBody;
     num_bodies++;
-    std::cout << "\ncreated body with texture " << texture_file << "\n";
 }
 
 
@@ -666,7 +680,7 @@ void add_body(
  * Add Belt
  * Authors - Derek Stotz, Charles Parsons
  *
- * Creates and adds a single belt to the belt list
+ * Creates and adds a single asteroid belt to the belt list
  ******************************************************************************/
 void add_belt(
     int count,
@@ -702,7 +716,7 @@ void add_belt(
 }
 
   /***************************************************************************//**
- * Create Solar System
+ * Create Camera
  * Authors - Derek Stotz, Charles Parsons
  *
  * Creates the initial camera and speed states
@@ -791,8 +805,8 @@ Moon 1738 0.384 27.3 27.3
 
 
   /***************************************************************************//**
- * Create Solar System
- * Authors - Derek Stotz, Charles Parsons
+ * Create Menus
+ * Authors - John Weiss, Derek Stotz, Charles Parsons
  *
  * Adds items to the right-click dropdown menu
  ******************************************************************************/
@@ -814,8 +828,8 @@ void CreateMenus()
 }
 
   /***************************************************************************//**
- * Create Solar System
- * Authors - Derek Stotz, Charles Parsons
+ * MainMenuHandler
+ * Authors - John Weiss, Derek Stotz, Charles Parsons
  *
  * Handles menu selection
  ******************************************************************************/

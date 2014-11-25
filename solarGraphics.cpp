@@ -8,6 +8,42 @@ extern GLubyte* asteroid_image;
 // fidelity of wireframes
 extern int fidelity;
 
+// initialize the light model
+void initLightModel()
+{
+    glEnable(GL_COLOR_MATERIAL);
+
+    GLfloat mat_specular[] = { .9, .9, .9, 1.0 };
+    GLfloat mat_diffuse[] = { .9, .9, .9, 1.0 };
+    GLfloat mat_ambient[] = { 0.4, 0.4, 0.4, 1.0 };
+    GLfloat mat_shininess = { 0.0 };
+
+    glMaterialfv( GL_FRONT, GL_SPECULAR, mat_specular );
+    glMaterialfv( GL_FRONT, GL_AMBIENT, mat_ambient );
+    glMaterialfv( GL_FRONT, GL_DIFFUSE, mat_diffuse );
+    glMaterialf( GL_FRONT, GL_SHININESS, mat_shininess);
+
+    GLfloat light_ambient[] = { 0.4, 0.4, 0.4, 0.1 };
+    GLfloat light_diffuse[] = { 0.8, 0.8, 0.8, 1.0 };
+    GLfloat light_specular[] = { .9, .9, .9, 1.0 };
+    GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+
+    glLightfv( GL_LIGHT0, GL_POSITION, light_position );
+    glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
+    glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
+
+    glShadeModel( GL_SMOOTH );
+    glEnable( GL_LIGHTING );
+    glEnable( GL_LIGHT0 );
+
+    glEnable( GL_DEPTH_TEST );
+    glColor3f ( 1.0, 1.0, 1.0 );
+    glEnable( GL_NORMALIZE );    // automatic normalization of normals
+    glEnable( GL_CULL_FACE );    // eliminate backfacing polygons
+    glCullFace( GL_BACK );
+}
+
 //drawWireSpheres
 //glutWireSphere(GLdouble radius, GLint slices, GLint stacks); slices = longitude, stacks = lattitude
 void drawWired(Body body)
