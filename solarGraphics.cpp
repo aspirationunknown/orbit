@@ -56,6 +56,20 @@ void drawTextured(Body body)
         gluQuadricNormals( sphere, GLU_SMOOTH );//creates normals for all verticies
         gluQuadricTexture( sphere, GL_TRUE );//creates texture coordinates
     }
+    else
+    {
+        glEnable(GL_TEXTURE_2D);
+        glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE, asteroid_image );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+
+        sphere = gluNewQuadric( );
+        gluQuadricDrawStyle( sphere, GLU_FILL );//draws the sphere with filled in polygons
+        gluQuadricNormals( sphere, GLU_SMOOTH );//creates normals for all verticies
+        gluQuadricTexture( sphere, GL_TRUE );//creates texture coordinates
+    }
 
     if(body.has_ring == true)
     {
