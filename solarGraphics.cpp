@@ -22,6 +22,7 @@ void drawWired(Body body)
 void drawSmooth(Body body)
 {
     glPushMatrix();
+      glShadeModel(GL_SMOOTH);
       glTranslatef(body.center.x, body.center.y, body.center.z);
       glColor3fv(body.color);
       glutSolidSphere(body.radius, 50, 50);
@@ -112,6 +113,16 @@ void drawSmoothRing(Body body)
 {
     GLUquadricObj* ring;
     ring = gluNewQuadric();
+    glShadeModel(GL_SMOOTH);
+    //need to set center of ring to center of body
+    gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, 20, 20);
+}
+
+void drawFlatRing(Body body)
+{
+    GLUquadricObj* ring;
+    ring = gluNewQuadric();
+    glShadeModel(GL_FLAT);
     //need to set center of ring to center of body
     gluCylinder(ring, body.ring.min_radius, body.ring.max_radius, 0.0, 20, 20);
 }
@@ -119,8 +130,39 @@ void drawSmoothRing(Body body)
 void drawFlat(Body body)
 {
     glPushMatrix();
+      glShadeModel(GL_FLAT);
       glTranslatef(body.center.x, body.center.y, body.center.z);
       glColor3fv(body.color);
       glutSolidSphere(body.radius, 50, 50);
     glPopMatrix();
+}
+
+void cameraFunction(Camera camera)
+{
+    gluPerspective(45.0, 0.5, 0.0, 100000.0);
+    gluLookAt(50.0, 50.0, 50.0, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0);
+}
+
+void displayLabel(Body body)
+{
+    drawBitmapString(body.name, body.position.x, body.position.y, -body.radius - 5.0, White);
+}
+
+ /***************************************************************************//**
+ * DrawBitmapString
+ * Authors - Dr. John Weiss
+ *
+ * Draws a stroke string for a game menu
+ * Parameters -
+    string - the string to draw
+    x - the x location to draw the string on the screen
+    y - the y location to draw the string on the screen
+    color -the color the draw the string, stored in a 3-element array
+ ******************************************************************************/
+void drawBitmapString( const char *string, float x, float y, float z, const float color[] )
+{
+    glColor3f( color[0], color[1], color[2] );
+    glRasterPos3f( x, y, z );
+    // while ( *string ) glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, *string++ );
+    glutBitmapString( GLUT_BITMAP_HELVETICA_18, (const unsigned char *)string );
 }
