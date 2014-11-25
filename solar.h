@@ -37,6 +37,8 @@ enum mode {SMOOTH, FLAT, WIREFRAME, TEXTURE};
 
 //function prototypes
 void cameraFunction(Camera camera);
+void displayLabel(Body body);
+void drawBitmapString( const char *string, float x, float y, float z, const float color[] );
 void drawFlat(Body body);
 void drawFlatRing(Body body);
 void drawOrbit(Body body);
