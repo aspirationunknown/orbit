@@ -127,32 +127,52 @@ void Camera::rotate_down(double r)
 {
 
 }
+
+
 void Camera::pan_forward(int d)
 {
+    std::cout << "\n-------------\nx:" << this->position.x;
+    std::cout << "\ny:" << this->position.y;
+    std::cout << "\nz:" << this->position.z;
+    
     Vector forward;
     forward.dx = look_at.x - position.x;
     forward.dy = look_at.y - position.y;
     forward.dz = look_at.z - position.z;
+
     forward.normalize();
     
     this->position.x += forward.dx;
     this->position.y += forward.dy;
     this->position.z += forward.dz;
 }
+
 void Camera::pan_backward(int d)
 {
+    std::cout << "\n-------------\nx:" << this->position.x;
+    std::cout << "\ny:" << this->position.y;
+    std::cout << "\nz:" << this->position.z;
+
     this->pan_forward(-1 * d);
 }
 void Camera::pan_left(int d)
 {
-    this->position.x += this->left.dx;
-    this->position.y += this->left.dy;
+    std::cout << "\n-------------\nx:" << this->position.x;
+    std::cout << "\ny:" << this->position.y;
+    std::cout << "\nz:" << this->position.z;
 
-    this->look_at.x += this->left.dx;
-    this->look_at.y += this->left.dy;
+    this->position.x += this->left.dx * d;
+    this->position.y += this->left.dy * d;
+
+    this->look_at.x += this->left.dx * d;
+    this->look_at.y += this->left.dy * d;
 }
 void Camera::pan_right(int d)
 {
+    std::cout << "\n-------------\nx:" << this->position.x;
+    std::cout << "\ny:" << this->position.y;
+    std::cout << "\nz:" << this->position.z;
+
     this->pan_left(-1 * d);
 }
 void Vector::normalize()
