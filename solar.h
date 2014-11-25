@@ -36,7 +36,9 @@ const int EscapeKey = 27;
 enum mode {SMOOTH, FLAT, WIREFRAME, TEXTURE};
 
 //function prototypes
+void cameraFunction(Camera camera);
 void drawFlat(Body body);
+void drawFlatRing(Body body);
 void drawOrbit(Body body);
 void drawSmooth(Body body);
 void drawSmoothRing(Body body);
